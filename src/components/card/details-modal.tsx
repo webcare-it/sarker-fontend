@@ -1,0 +1,92 @@
+import { useGetProductDetails } from "@/api/queries/useProducts";
+import type { ProductDetailsResponse } from "@/pages/details";
+import type { ProductDetailsType, ProductType } from "@/type";
+import { useNavigate } from "react-router-dom";
+import { VariantCard } from "./variant";
+import { ImageSection } from "./image";
+import { useState } from "react";
+import { Review } from "./review";
+import { CartButton } from "../common/cart-button";
+import { Skeleton } from "../common/skeleton";
+import { getVariant } from "@/helper";
+
+interface Props {
+  id: string;
+  onHideModal: () => void;
+}
+interface DetailsModalResponse {
+  data: ProductDetailsResponse | undefined;
+  isLoading: boolean;
+  error: unknown;
+}
+type StateType = string | null;
+
+export const DetailsModal = ({ id, onHideModal }: Props) => {
+  const navigate = useNavigate();
+  const [quantity, setQuantity] = useState<number>(1);
+  const [displayPrice, setDisplayPrice] = useState<string>("0");
+  const [selectedSize, setSelectedSize] = useState<StateType>(null);
+  const [selectedColor, setSelectedColor] = useState<StateType>(null);
+  const [selectedVariantImage, setSelectedVariantImage] =
+    useState<StateType>(null);
+  const { data, isLoading } = useGetProductDetails(
+    id as string
+  ) as DetailsModalResponse;
+
+  if (isLoading)
+    return (
+      <div className="w-full grid grid-cols-1 md:grid-cols-2 gap-1 md:gap-3 bg-background">
+        <Skeleton className="w-full h-[320px]" />
+        <div className="space-y-1.5 md:space-y-2.5">
+          <Skeleton className="w-full h-8" />
+          <Skeleton className="w-full h-6" />
+          <Skeleton className="w-full h-5" />
+          <Skeleton className="w-full h-10" />
+          <Skeleton className="w-full h-10" />
+        </div>
+      </div>
+    );
+
+  if (!data?.data?.[0]) navigate("/products");
+
+  const product: ProductDetailsType = data?.data?.[0] as ProductDetailsType;
+
+  return (
+    <section className="w-full grid grid-cols-1 md:grid-cols-2 gap-1 md:gap-3 bg-background">
+      <ImageSection
+        height="320px"
+        product={product}
+        selectedVariantImage={selectedVariantImage}
+      />
+
+      <div className="space-y-1.5 md:space-y-2.5">
+        <h2 className="text-xl md:text-2xl font-bold">{product?.name}</h2>
+
+        <Review product={product} />
+        <h3 className="text-xl md:text-2xl font-bold">{displayPrice}</h3>
+
+        <VariantCard
+          product={product}
+          quantity={quantity}
+          setQuantity={setQuantity}
+          selectedSize={selectedSize}
+          selectedColor={selectedColor}
+          setSelectedSize={setSelectedSize}
+          setSelectedColor={setSelectedColor}
+          setDisplayPrice={setDisplayPrice}
+          onVariantImageChange={setSelectedVariantImage}
+        />
+
+        <div className="flex">
+          <CartButton
+            product={product as unknown as ProductType}
+            quantity={quantity}
+            type="DETAILS"
+            variant={getVariant(selectedColor, selectedSize)}
+            onHideModal={onHideModal}
+          />
+        </div>
+      </div>
+    </section>
+  );
+};
