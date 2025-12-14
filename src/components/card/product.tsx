@@ -146,7 +146,7 @@ export const ProductSuccess = ({
         <div className="flex-1 w-full">
           <Link to="/checkout">
             <Button variant="default" className="w-full" onClick={onHideModal}>
-              {"Checkout"}
+              Order now
             </Button>
           </Link>
         </div>
