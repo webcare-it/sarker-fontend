@@ -3,16 +3,22 @@ import type { ProductDetailsResponse } from "@/pages/details";
 import type { ProductDetailsType, ProductType } from "@/type";
 import { useNavigate } from "react-router-dom";
 import { VariantCard } from "./variant";
-import { ImageSection } from "./image";
 import { useState } from "react";
 import { Review } from "./review";
 import { CartButton } from "../common/cart-button";
 import { Skeleton } from "../common/skeleton";
-import { getVariant } from "@/helper";
+import { getImageUrl, getVariant } from "@/helper";
+import { CheckoutButton } from "../common/checkout-button";
+import { ImageGallery } from "../common/image-gallery";
 
 interface Props {
   id: string;
-  onHideModal: () => void;
+  onShowModal?: (
+    type: string,
+    title?: string,
+    size?: string,
+    data?: unknown
+  ) => void;
 }
 interface DetailsModalResponse {
   data: ProductDetailsResponse | undefined;
@@ -21,7 +27,7 @@ interface DetailsModalResponse {
 }
 type StateType = string | null;
 
-export const DetailsModal = ({ id, onHideModal }: Props) => {
+export const DetailsModal = ({ id, onShowModal }: Props) => {
   const navigate = useNavigate();
   const [quantity, setQuantity] = useState<number>(1);
   const [displayPrice, setDisplayPrice] = useState<string>("0");
@@ -53,10 +59,14 @@ export const DetailsModal = ({ id, onHideModal }: Props) => {
 
   return (
     <section className="w-full grid grid-cols-1 md:grid-cols-2 gap-1 md:gap-3 bg-background">
-      <ImageSection
-        height="320px"
+      <ImageGallery
         product={product}
-        selectedVariantImage={selectedVariantImage}
+        className="max-h-[340px]"
+        img={
+          selectedVariantImage
+            ? getImageUrl(selectedVariantImage)
+            : getImageUrl(product?.thumbnail_image)
+        }
       />
 
       <div className="space-y-1.5 md:space-y-2.5">
@@ -77,14 +87,32 @@ export const DetailsModal = ({ id, onHideModal }: Props) => {
           onVariantImageChange={setSelectedVariantImage}
         />
 
-        <div className="flex">
-          <CartButton
-            product={product as unknown as ProductType}
-            quantity={quantity}
-            type="DETAILS"
-            variant={getVariant(selectedColor, selectedSize)}
-            onHideModal={onHideModal}
-          />
+        <div className="flex gap-2 flex-col">
+          <div className="flex-1">
+            <CartButton
+              product={product as unknown as ProductType}
+              quantity={quantity}
+              type="DETAILS"
+              variant={getVariant(
+                selectedColor,
+                selectedSize,
+                product?.variants
+              )}
+              onShowModal={onShowModal}
+            />
+          </div>
+          <div className="flex-1">
+            <CheckoutButton
+              type="DETAILS"
+              product={product as unknown as ProductType}
+              quantity={quantity}
+              variant={getVariant(
+                selectedColor,
+                selectedSize,
+                product?.variants
+              )}
+            />
+          </div>
         </div>
       </div>
     </section>

@@ -1,85 +1,65 @@
-import Slider from "react-slick";
-import { Image } from "lucide-react";
-import { Link } from "react-router-dom";
-import { useGetBannerImages } from "@/api/queries/useGetImage";
-import { NoDataFound } from "@/components/common/no-data-found";
-import { Skeleton } from "@/components/common/skeleton";
-import { getImageUrl } from "@/helper";
+import "swiper/css";
+import "swiper/css/effect-fade";
+import "swiper/css/navigation";
+import "swiper/css/pagination";
+import { Swiper, SwiperSlide } from "swiper/react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
+import { Navigation, Pagination, Autoplay } from "swiper/modules";
+import { ImageWithLink } from "@/components/common/image-link";
+import { useConfig } from "@/hooks/useConfig";
+import { getConfig, getFormattedBanner } from "@/helper";
 
 export const HeroSection = () => {
-  const settings = {
-    dots: true,
-    infinite: true,
-    speed: 1000,
-    slidesToShow: 1,
-    slidesToScroll: 1,
-    autoplay: true,
-    autoplaySpeed: 3000,
-    arrows: false,
-    adaptiveHeight: false,
-    responsive: [
-      {
-        breakpoint: 768,
+  const config = useConfig();
+  const bannersConfig = getConfig(config, "home_slider_images")?.value;
+  const linksConfig = getConfig(config, "home_banner2_links")?.value as string;
+  const links = JSON.parse(linksConfig || "[]") as string[];
 
-        settings: {
-          slidesToShow: 1,
-          slidesToScroll: 1,
-          dots: true,
-        },
-      },
-    ],
-  };
+  const items = getFormattedBanner(bannersConfig, links);
 
-  const { data, isLoading } = useGetBannerImages();
+  const placeholder = [{ image: "/placeholder.svg", link: null }];
+
+  const banners = items?.length > 0 ? items : placeholder;
 
   return (
-    <div className="w-full mt-2">
-      {isLoading ? (
-        <div className="w-full h-[280px] md:h-[360px] bg-gray-200">
-          <Skeleton className="w-full h-full" />
-        </div>
-      ) : (
-        <Slider {...settings}>
-          {data && data?.length > 0 ? (
-            data?.map(
-              (
-                banner: { image: string; link: string | null },
-                index: number
-              ) => (
-                <div key={index} className="relative">
-                  {banner?.image ? (
-                    <div className="relative w-full aspect-[16/5] overflow-hidden">
-                      {banner?.link ? (
-                        <Link to={banner?.link} className="block w-full h-full">
-                          <img
-                            src={getImageUrl(banner?.image)}
-                            alt="banner"
-                            className="w-full h-full object-cover cursor-pointer hover:scale-105 transition-transform duration-300"
-                          />
-                        </Link>
-                      ) : (
-                        <img
-                          src={getImageUrl(banner?.image)}
-                          alt="banner"
-                          className="w-full h-full object-cover cursor-grab"
-                        />
-                      )}
-                    </div>
-                  ) : (
-                    <div className="w-full aspect-[16/5] flex items-center justify-center bg-gray-200">
-                      <Image className="w-16 h-16 text-gray-500" />
-                    </div>
-                  )}
-                </div>
-              )
-            )
-          ) : (
-            <div className="w-full h-[280px] flex items-center justify-center md:h-[360px] bg-gray-200">
-              <NoDataFound />
-            </div>
-          )}
-        </Slider>
-      )}
+    <div className="w-full mt-2 px-2 md:px-0">
+      <div className="relative">
+        <button className="prev-btn absolute left-2 top-1/2 -translate-y-1/2 z-10 p-1 md:p-2 rounded-full bg-primary/10 text-primary cursor-pointer border border-primary/40">
+          <ChevronLeft className="size-4 md:size-6" />
+        </button>
+        <button className="next-btn absolute right-2 top-1/2 -translate-y-1/2 z-10 p-1 md:p-2 rounded-full bg-primary/10 text-primary cursor-pointer border border-primary/40">
+          <ChevronRight className="size-4 md:size-6" />
+        </button>
+
+        <Swiper
+          slidesPerView={1}
+          spaceBetween={30}
+          loop={true}
+          speed={1000}
+          autoplay={{ delay: 3000, disableOnInteraction: false }}
+          pagination={{ clickable: true }}
+          modules={[Pagination, Navigation, Autoplay]}
+          onBeforeInit={(swiper) => {
+            if (
+              typeof swiper.params.navigation === "boolean" ||
+              swiper.params.navigation == null
+            ) {
+              (swiper.params as { navigation?: unknown }).navigation =
+                {} as unknown as Record<string, unknown>;
+            }
+            const nav = swiper.params.navigation as Record<string, unknown>;
+            nav.prevEl = ".prev-btn";
+            nav.nextEl = ".next-btn";
+          }}
+          navigation={{ prevEl: ".prev-btn", nextEl: ".next-btn" }}
+          className="mySwiper">
+          {banners?.map((item, idx) => (
+            <SwiperSlide key={idx}>
+              <ImageWithLink item={item} />
+            </SwiperSlide>
+          ))}
+        </Swiper>
+      </div>
     </div>
   );
 };

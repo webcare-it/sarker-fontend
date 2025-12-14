@@ -11,6 +11,7 @@ import { SeoWrapper } from "@/components/common/seo-wrapper";
 
 export const SearchPage = () => {
   const [searchParams] = useSearchParams();
+
   const type = searchParams.get("type") || "";
   const query = searchParams.get("query") || "";
   const params = { query_key: query, ...(type.trim() ? { type } : {}) };
@@ -30,7 +31,7 @@ export const SearchPage = () => {
           />
           <CardLayout>
             {isLoading ? (
-              Array.from({ length: 10 }).map((_, i) => (
+              Array.from({ length: 12 }).map((_, i) => (
                 <ProductCardSkeleton key={i} />
               ))
             ) : products?.length > 0 ? (
@@ -45,8 +46,8 @@ export const SearchPage = () => {
                 </AnimationWrapper>
               ))
             ) : (
-              <div className="col-span-1">
-                <NoDataFound title="No products found" />
+              <div className="w-full">
+                <NoDataFound title={"No products found"} />
               </div>
             )}
           </CardLayout>

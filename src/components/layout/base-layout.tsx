@@ -5,40 +5,71 @@ import { getConfig } from "@/helper";
 import { useConfig } from "@/hooks/useConfig";
 import { useGetWishlist } from "@/controllers/wishlistController";
 import { useGetCart } from "@/controllers/cartController";
+import { ScrollToTop } from "@/components/common/scroll-to-top";
+import { useEffect, useMemo } from "react";
+import { useLocation } from "react-router-dom";
 import { Footer } from "./footer";
+import nprogress from "nprogress";
 
 interface Props {
   children: React.ReactNode;
   isContainer?: boolean;
   isShowMegaMenu?: boolean;
+  isShowNewsletterSection?: boolean;
 }
 
-export const BaseLayout = ({
+const BaseLayoutContent = ({
   children,
   isContainer = true,
   isShowMegaMenu = true,
+  isShowNewsletterSection = false,
 }: Props) => {
   useGetCart();
   useGetWishlist();
   const config = useConfig();
+  const location = useLocation();
+
   const isSticky = getConfig(config, "header_stikcy")?.value;
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [location]);
+
+  useEffect(() => {
+    nprogress.start();
+    nprogress.done();
+  }, [location.pathname]);
+
+  const headerContent = useMemo(
+    () => (
+      <nav className={`${isSticky ? "sticky top-0 z-50" : ""}`}>
+        <HeaderDesktop isShowMegaMenu={isShowMegaMenu} />
+        <HeaderMobile />
+      </nav>
+    ),
+    [isSticky, isShowMegaMenu]
+  );
 
   return (
     <main className="min-h-screen flex flex-col">
-      <header className={`${isSticky ? "sticky top-0 z-50" : ""}`}>
-        <HeaderDesktop isShowMegaMenu={isShowMegaMenu} />
-        <HeaderMobile />
-      </header>
+      {headerContent}
+
       <section
         className={`${
           isContainer ? "container md:mx-auto" : ""
-        } flex-1 pt-[50px] md:pt-0`}>
+        } flex-1 md:pt-0 md:pb-0`}>
         {children}
       </section>
       <footer>
-        <Footer />
+        <Footer isShowNewsletterSection={isShowNewsletterSection} />
         <FooterMobile />
       </footer>
+
+      <ScrollToTop />
     </main>
   );
+};
+
+export const BaseLayout = (props: Props) => {
+  return <BaseLayoutContent {...props} />;
 };

@@ -1,27 +1,27 @@
 export interface UserType {
   id: number;
-  referred_by: null;
-  provider_id: null;
+  referred_by: number | null;
+  provider_id: string | null;
   user_type: string;
   name: string;
-  email: null;
-  email_verified_at: null;
-  verification_code: string;
-  new_email_verificiation_code: null;
-  device_token: null;
-  avatar: null;
-  avatar_original: null;
-  address: null;
-  country: null;
-  state: null;
-  city: null;
-  postal_code: null;
-  phone: string;
-  balance: number | null;
-  banned: number | null;
-  referral_code: null;
-  customer_package_id: null;
-  remaining_uploads: number | null;
+  email: string | null;
+  email_verified_at: string | null;
+  verification_code: string | null;
+  new_email_verificiation_code: string | null;
+  device_token: string | null;
+  avatar: string | null;
+  avatar_original: string | null;
+  address: string | null;
+  country: string | null;
+  state: string | null;
+  city: string | null;
+  postal_code: string | null;
+  phone: string | null;
+  balance: number;
+  banned: number;
+  referral_code: string | null;
+  customer_package_id: number | null;
+  remaining_uploads: number;
   created_at: string;
   updated_at: string;
 }
@@ -30,6 +30,7 @@ export interface ProductType {
   id: number;
   name: string;
   productId?: string | number;
+  category_name: string;
   thumbnail_image: string;
   has_discount: boolean;
   stroked_price: string;
@@ -46,6 +47,16 @@ export interface ProductType {
   };
 }
 
+export interface HomePropsType {
+  isLoading: boolean;
+  products: ProductType[] | [];
+}
+
+export interface HomeBannerPropsType {
+  isLoading: boolean;
+  items: { image: string | null; link: string | null }[] | [];
+  isShowTitle?: boolean;
+}
 export interface CategoryProductType extends ProductType {
   category_name: string;
 }
@@ -65,6 +76,7 @@ export interface ProductDetailsType {
   id: number;
   name: string;
   added_by: string;
+  category_name: string;
   seller_id: number;
   shop_id: number;
   review: number;
@@ -114,6 +126,7 @@ export interface StateSyncType {
   mainPrice: number;
   showPrice: number | string;
   variant?: string | null;
+  category_name?: string | null;
   quantity: number;
 }
 
@@ -127,4 +140,91 @@ export interface CategoryType {
     products: string;
     sub_categories: string;
   };
+}
+
+export interface ShippingType {
+  id: number;
+  name: string;
+  amount: number;
+  status: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface OrderType {
+  id: number;
+  code: string;
+  user_id: number;
+  payment_type: string;
+  payment_status: string;
+  payment_status_string: string;
+  delivery_status: string;
+  delivery_status_string: string;
+  grand_total: string;
+  date: string;
+  links: {
+    details: string;
+  };
+}
+
+export interface InvoiceType {
+  order_code: string;
+  order_date: string;
+  order_status: string;
+  payment_method: string;
+
+  subtotal: number;
+  customer_type: "new" | "returning";
+  shipping_cost: number;
+  tax: number;
+  coupon_discount: number;
+  grand_total: number;
+  coupon: string;
+  shipping_address: {
+    name: string | null;
+    email: string | null;
+    phone: string | null;
+    address: string | null;
+    city: string | null;
+    postal_code: string | null;
+    country: string | null;
+  };
+  user: {
+    name: string;
+    email: string;
+    phone: string;
+  };
+  order_items: {
+    product_id: number;
+    product_name: string;
+    product_thumbnail_image: string;
+    variation?: string | null;
+    quantity: number;
+    delivery_type: string;
+    price: number;
+    category_name: string;
+    shipping_cost: number;
+    subtotal: number;
+  }[];
+}
+
+export interface BrandType {
+  id: number;
+  name: string;
+  logo: string;
+  links: {
+    products: string;
+  };
+}
+
+export interface FilterPropsType {
+  filters: Record<string, unknown>;
+  setFilters: (filters: Record<string, unknown>) => void;
+}
+
+export interface FlashDealType {
+  id: number;
+  title: string;
+  date: number;
+  banner: string;
 }

@@ -9,7 +9,6 @@ interface PhoneValidationType {
 export const usePhoneValidation = () => {
   const [phone, setPhone] = useState("");
   const [touched, setTouched] = useState(false);
-
   const validateBangladeshiPhone = (phone: string): PhoneValidationType => {
     if (!phone) {
       return {
@@ -81,10 +80,10 @@ export const usePhoneValidation = () => {
   return {
     phone,
     touched,
-    handlePhoneChange,
-    handleBlur,
     isValid,
     error,
+    handleBlur,
+    handlePhoneChange,
     validateBangladeshiPhone,
   };
 };

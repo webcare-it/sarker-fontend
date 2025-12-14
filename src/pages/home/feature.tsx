@@ -1,38 +1,21 @@
-import type { ProductType } from "@/type";
-import { useGetProductsForHome } from "@/api/queries/useProducts";
-import { AnimationWrapper } from "@/components/common/animation-wrapper";
-import { CardLayout } from "@/components/common/card-layout";
-import { SectionTitle } from "@/components/common/section-title";
-import { ProductCard, ProductCardSkeleton } from "@/components/card/product";
-import { useTranslation } from "@/hooks/useTranslation";
+import type { HomePropsType } from "@/type";
 
-export const FeaturedProductsSection = () => {
-  const { t } = useTranslation();
-  const { data, isLoading } = useGetProductsForHome("featured");
+import { ProductSection } from "@/components/common/product-section";
 
-  const products = (data?.data as ProductType[]) || [];
+export const FeaturedProductsSection = ({
+  isLoading,
+  products,
+}: HomePropsType) => {
   return (
     <section
-      className={`mb-10 md:mb-20 container mx-auto ${
+      className={`container mx-auto ${
         products?.length === 0 && !isLoading && "hidden"
       }`}>
-      <SectionTitle title={t.featured_products} />
-      <CardLayout>
-        {isLoading
-          ? Array.from({ length: 5 }).map((_, i) => (
-              <ProductCardSkeleton key={i} />
-            ))
-          : products?.map((product, i: number) => (
-              <AnimationWrapper
-                key={product.id}
-                initial={{ opacity: 0, y: 40 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, amount: 0.2 }}
-                transition={{ duration: 0.6, delay: i * 0.05 }}>
-                <ProductCard key={product.id} product={product} />
-              </AnimationWrapper>
-            ))}
-      </CardLayout>
+      <ProductSection
+        title={"Featured Products"}
+        products={products}
+        isLoading={isLoading}
+      />
     </section>
   );
 };

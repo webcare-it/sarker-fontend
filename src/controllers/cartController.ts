@@ -21,35 +21,48 @@ import { useEffect } from "react";
 import { useGetCartQuery } from "@/api/queries/useGetCart";
 import { apiErrorHandler } from "@/api/utils/error";
 import { revalidateQueryFn } from "@/lib/query-client";
+import { useNavigate } from "react-router-dom";
+import type { ItemTrackerType } from "@/hooks/useGtmTracker";
+import { useGtmTracker } from "@/hooks/useGtmTracker";
 
 export const useAddToCart = (
   item: ProductType,
   quantity: number = 1,
   variant: string | null = null,
-  productId?: string | number | null
+  productId?: string | number | null,
+  onShowModal?: (
+    type: string,
+    title?: string,
+    size?: string,
+    data?: unknown
+  ) => void
 ) => {
+  const navigate = useNavigate();
   const dispatch = useDispatch();
   const { mutate } = useAddToCartMutation();
+  const { addToCartTracker } = useGtmTracker();
   const { startLoadingFn, stopLoadingFn } = useLoading();
-  const cart = useSelector((state: RootStateType) => state.cart);
 
-  const fnAddToCart = () => {
-    const existingItem = isExistingItem(cart?.items, item);
-
-    if (existingItem) {
-      toast.error("Item already in cart");
-      return;
-    }
-
+  const fnAddToCart = (isCheckout?: boolean) => {
     const data: StateSyncType = {
       id: item?.id,
-      productId: item?.id,
+      productId: productId || item?.id,
       name: item?.name,
       mainPrice: item?.calculable_price,
       image: item?.thumbnail_image,
       showPrice: item?.main_price,
       variant: variant,
+      category_name: item?.category_name,
       quantity,
+    };
+
+    const trackerData: ItemTrackerType = {
+      item_id: item?.id.toString(),
+      item_name: item?.name,
+      item_price: item?.calculable_price || 0,
+      item_quantity: quantity || 1,
+      item_category: item?.category_name,
+      item_variant: variant,
     };
 
     const formData = new FormData();
@@ -61,13 +74,21 @@ export const useAddToCart = (
     } else {
       formData.append("temp_user_id", getGuestUserId() as string);
     }
+
     mutate(formData, {
       onSuccess: (res) => {
         if (res?.result === true) {
-          revalidateQueryFn("get_cart");
           toast.success(res?.message || "Item added to cart");
+          addToCartTracker(trackerData);
           dispatch(addToCartFn(data));
           stopLoadingFn(item?.id);
+          revalidateQueryFn("get_cart");
+          if (isCheckout) {
+            navigate("/checkout");
+          }
+          if (onShowModal) {
+            onShowModal("SUCCESS", "Item added to cart", "w-md");
+          }
         } else {
           toast.error(res?.message || "Something went wrong");
           stopLoadingFn(item?.id);
@@ -86,14 +107,10 @@ export const useAddToCart = (
   return { isLoading, fnAddToCart };
 };
 
-export const useRemoveFromCart = (
-  item: ProductType | StateSyncType,
-  isShowToast: boolean = true
-) => {
+export const useRemoveFromCart = (item: ProductType | StateSyncType) => {
   const dispatch = useDispatch();
   const { mutate, isPending } = useRemoveCartMutation();
   const { startLoadingFn, stopLoadingFn } = useLoading();
-
   const cart = useSelector((state: RootStateType) => state.cart);
   const isExisting = isExistingItem(cart?.items, item as ProductType);
 
@@ -109,9 +126,9 @@ export const useRemoveFromCart = (
               dispatch(removeFromCartFn(id as number));
               revalidateQueryFn("get_cart");
               revalidateQueryFn("get_cart_summary");
-              if (isShowToast) {
-                toast.success("Item removed from cart");
-              }
+
+              toast.success("Item removed from cart");
+
               stopLoadingFn(item?.id);
             } else {
               toast.error(res?.message || "Something went wrong");
@@ -245,6 +262,7 @@ export const useGetCart = () => {
           id: item?.id,
           productId: item?.product_id,
           name: item?.product_name,
+          category_name: item?.category_name,
           image: item?.product_thumbnail_image,
           mainPrice: item?.price,
           showPrice: `${item?.currency_symbol} ${item?.price}`,

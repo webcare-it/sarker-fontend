@@ -16,32 +16,31 @@ export const Social = () => {
 
   return showSocialLinks ? (
     <div className="flex items-center gap-4">
-      <span className="text-sm font-semibold text-white">Follow Us:</span>
       <div className="flex gap-3">
         <Link
           to={facebookLink as string}
-          className="bg-muted hover:bg-primary p-2 rounded-full transition-colors">
-          <Facebook className="w-5 h-5" />
+          className="hover:bg-primary border duration-75 p-2 rounded-full transition-colors">
+          <Facebook className="w-4 h-4" />
         </Link>
         <Link
           to={twitterLink as string}
-          className="bg-muted hover:bg-primary p-2 rounded-full transition-colors">
-          <Twitter className="w-5 h-5" />
+          className="hover:bg-primary border duration-75 p-2 rounded-full transition-colors">
+          <Twitter className="w-4 h-4" />
         </Link>
         <Link
           to={instagramLink as string}
-          className="bg-muted hover:bg-primary p-2 rounded-full transition-colors">
-          <Instagram className="w-5 h-5" />
+          className="hover:bg-primary border duration-75 p-2 rounded-full transition-colors">
+          <Instagram className="w-4 h-4" />
         </Link>
         <Link
           to={youtubeLink as string}
-          className="bg-muted hover:bg-primary p-2 rounded-full transition-colors">
-          <Youtube className="w-5 h-5" />
+          className="hover:bg-primary border duration-75 p-2 rounded-full transition-colors">
+          <Youtube className="w-4 h-4" />
         </Link>
         <Link
           to={linkedinLink as string}
-          className="bg-muted hover:bg-primary p-2 rounded-full transition-colors">
-          <Linkedin className="w-5 h-5" />
+          className="hover:bg-primary border duration-75 p-2 rounded-full transition-colors">
+          <Linkedin className="w-4 h-4" />
         </Link>
       </div>
     </div>

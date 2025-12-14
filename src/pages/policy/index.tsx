@@ -1,31 +1,50 @@
-import { useGetPolicy } from "@/api/queries/usePolicy";
+import { useGetCustomPage } from "@/api/queries/usePolicy";
+import { NoDataFound } from "@/components/common/no-data-found";
+import { SectionTitle } from "@/components/common/section-title";
 import { SeoWrapper } from "@/components/common/seo-wrapper";
 import { Skeleton } from "@/components/common/skeleton";
 import { BaseLayout } from "@/components/layout/base-layout";
 
-export const PolicyPage = () => {
-  const { data, isLoading, key } = useGetPolicy();
+interface SupportPolicyPage {
+  content: string;
+  created_at: string;
+  id: number;
+  keywords: string | null;
+  meta_description: string | null;
+  meta_image: string | null;
+  meta_title: string | null;
+  slug: string;
+  title: string;
+  type: "support_policy_page";
+  updated_at: string;
+}
 
-  const content = data?.data?.[0]?.content as string;
+export const PolicyPage = () => {
+  const { data, isLoading, key } = useGetCustomPage();
+
+  const info = (data?.data as SupportPolicyPage) || {};
 
   return (
     <>
-      <SeoWrapper title={`Policy ${key?.toUpperCase()}`} />
+      <SeoWrapper title={info?.meta_title || info?.title || `Policy ${key}`} />
       <BaseLayout isShowMegaMenu={false}>
         <div className="my-10 md:my-16">
           {isLoading ? (
             <div className="flex flex-col gap-4">
-              {Array.from({ length: 10 }).map((_, i) => (
+              {Array.from({ length: 20 }).map((_, i) => (
                 <Skeleton key={i} className="h-4 w-full" />
               ))}
             </div>
-          ) : content ? (
-            <div
-              className="prose prose-sm max-w-none"
-              dangerouslySetInnerHTML={{ __html: content }}
-            />
+          ) : info?.content ? (
+            <article>
+              <SectionTitle title={info?.title || `Policy ${key}`} />
+              <div
+                className=""
+                dangerouslySetInnerHTML={{ __html: info?.content || "" }}
+              />
+            </article>
           ) : (
-            <div> No content found</div>
+            <NoDataFound title={"No policy found"} />
           )}
         </div>
       </BaseLayout>

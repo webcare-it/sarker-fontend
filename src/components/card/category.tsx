@@ -1,7 +1,8 @@
 import { Skeleton } from "../common/skeleton";
-import { getImageUrl, slugify } from "@/helper";
+import { slugify } from "@/helper";
 import { Image } from "lucide-react";
 import { Link } from "react-router-dom";
+import { OptimizedImage } from "../common/optimized-image";
 
 interface CategoryType {
   id: number;
@@ -22,11 +23,7 @@ export const CategoryCard = ({ category }: { category: CategoryType }) => {
       className="group relative rounded-lg shadow-sm border border-border overflow-hidden transition-all duration-300 hover:scale-105 cursor-pointer flex flex-col">
       <div className="relative w-full h-32 md:h-40 overflow-hidden flex-shrink-0">
         {category?.banner ? (
-          <img
-            src={getImageUrl(category?.banner)}
-            alt={category?.name}
-            className="w-full h-full absolute object-cover"
-          />
+          <OptimizedImage src={category?.banner} alt={category?.name} />
         ) : (
           <div className="w-full absolute h-full bg-muted flex items-center justify-center">
             <Image className="w-20 h-20 text-muted-foreground" />
@@ -39,9 +36,11 @@ export const CategoryCard = ({ category }: { category: CategoryType }) => {
         <h3 className="font-semibold text-foreground text-sm group-hover:text-primary transition-colors duration-300 line-clamp-1">
           {category?.name}
         </h3>
-        <p className="text-xs text-muted-foreground">
-          {category?.number_of_children} subcategories
-        </p>
+        {category?.number_of_children > 0 && (
+          <p className="text-xs text-muted-foreground">
+            {category?.number_of_children} subcategories
+          </p>
+        )}
       </div>
     </Link>
   );

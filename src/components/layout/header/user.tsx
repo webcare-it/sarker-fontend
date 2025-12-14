@@ -1,109 +1,107 @@
-import {
-  Heart,
-  LayoutDashboard,
-  List,
-  LogIn,
-  LogOut,
-  Settings,
-  ShoppingBag,
-  User,
-  UserRound,
-} from "lucide-react";
+import { UserRound } from "lucide-react";
 import { Button } from "../../ui/button";
-import {
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "../../ui/dropdown-menu";
-import { DropdownMenu } from "../../ui/dropdown-menu";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { Avatar, AvatarFallback, AvatarImage } from "../../ui/avatar";
 import { useGetUserQuery } from "@/api/queries/useUser";
-import { getGuestUserId, getUUID, isAuthenticated } from "@/helper";
-import type { UserType } from "@/type";
-import { useSignOutMutation } from "@/api/mutations/useAuth";
+import {
+  getGuestUserId,
+  getProfileImage,
+  getUUID,
+  isAuthenticated,
+} from "@/helper";
 import { useEffect } from "react";
 
+import { cn } from "@/lib/utils";
+import { Sheet, SheetContent, SheetTrigger } from "../../ui/sheet";
+import { ProfileCard } from "@/components/card/profile";
+import type { UserType } from "@/type";
+
 interface Props {
-  variant?: "default" | "mobile";
-  children?: React.ReactNode;
+  variant?: "desktop" | "mobile";
 }
 
-export const UserProfile = ({ variant = "default", children }: Props) => {
+export const UserProfile = ({ variant = "desktop" }: Props) => {
+  const location = useLocation();
   const { data } = useGetUserQuery();
-  const { mutate, isPending } = useSignOutMutation();
+  const user = data?.user as unknown as UserType;
 
   useEffect(() => {
     if (!getGuestUserId() && !isAuthenticated()) {
       const guestUserId = getUUID();
-      localStorage.setItem("guest_user_id", guestUserId);
+      setTimeout(() => {
+        localStorage.setItem("guest_user_id", guestUserId);
+      }, 5000);
     }
   }, []);
 
-  const Default = () => {
+  const linkTo = isAuthenticated() ? "/dashboard" : "/signin";
+
+  const Desktop = () => {
     return (
-      <Button variant="ghost" size="icon-lg" className="focus:outline-none">
-        {isAuthenticated() ? (
-          <Avatar>
-            <AvatarImage
-              src={data ? (data as UserType)?.avatar || undefined : undefined}
-            />
-            <AvatarFallback>
-              {(data as UserType)?.name?.charAt(0)}
-            </AvatarFallback>
-          </Avatar>
-        ) : (
-          <UserRound className="h-6 w-6" />
-        )}
+      <Button
+        variant="ghost"
+        size="icon-lg"
+        className={cn("focus:outline-none rounded-full! overflow-hidden")}
+        asChild>
+        <Link to={linkTo}>
+          {isAuthenticated() ? (
+            <Avatar className="border border-primary rounded-full">
+              <AvatarImage src={getProfileImage(user)} />
+              <AvatarFallback className="text-primary">
+                {user?.name?.charAt(0) || "U"}
+              </AvatarFallback>
+            </Avatar>
+          ) : (
+            <UserRound className="h-6 w-6" />
+          )}
+        </Link>
       </Button>
     );
   };
 
   const Mobile = () => {
-    return <>{children && children}</>;
+    if (isAuthenticated()) {
+      return (
+        <Sheet>
+          <SheetTrigger asChild>
+            <button className="flex flex-col items-center justify-center min-w-0 flex-1">
+              <Avatar className="border border-primary size-6">
+                <AvatarImage
+                  src={user ? user?.avatar || undefined : undefined}
+                />
+                <AvatarFallback className="text-xs text-primary">
+                  {user?.name?.charAt(0) || "U"}
+                </AvatarFallback>
+              </Avatar>
+              <span
+                className={cn(
+                  "text-[10px] font-medium",
+                  location.pathname?.includes("/dashboard")
+                    ? "text-primary"
+                    : "text-foreground"
+                )}>
+                {"Account"}
+              </span>
+            </button>
+          </SheetTrigger>
+          <SheetContent side="left" className="border-none">
+            <ProfileCard />
+          </SheetContent>
+        </Sheet>
+      );
+    }
+
+    return (
+      <Link
+        to={linkTo}
+        className="flex flex-col items-center justify-center min-w-0 flex-1">
+        <UserRound className={cn("h-5 w-5 mb-1 text-foreground")} />
+        <span className={cn("text-[10px] font-medium text-foreground")}>
+          {"Account"}
+        </span>
+      </Link>
+    );
   };
 
-  return (
-    <DropdownMenu>
-      <DropdownMenuTrigger>
-        {variant === "default" ? <Default /> : <Mobile />}
-      </DropdownMenuTrigger>
-      <DropdownMenuContent className="w-56" align="end">
-        <DropdownMenuItem>
-          <User className="h-6 w-6" /> Profile
-        </DropdownMenuItem>
-        <DropdownMenuItem>
-          <LayoutDashboard className="h-6 w-6" /> Dashboard
-        </DropdownMenuItem>
-        <DropdownMenuItem>
-          <Heart className="h-6 w-6" /> Wishlist
-        </DropdownMenuItem>
-        <DropdownMenuItem>
-          <ShoppingBag className="h-6 w-6" /> Cart
-        </DropdownMenuItem>
-        <DropdownMenuItem>
-          <List className="h-6 w-6" /> Orders
-        </DropdownMenuItem>
-        <DropdownMenuItem>
-          <Settings className="h-6 w-6" /> Settings
-        </DropdownMenuItem>
-        {!isAuthenticated() ? (
-          <DropdownMenuItem>
-            <Link to="/signin" className="flex items-center gap-2">
-              <LogIn className="h-6 w-6 " />
-              Sign In
-            </Link>
-          </DropdownMenuItem>
-        ) : (
-          <DropdownMenuItem
-            onClick={() => mutate()}
-            disabled={isPending}
-            variant="destructive">
-            <LogOut className="h-6 w-6 " />
-            Sign Out
-          </DropdownMenuItem>
-        )}
-      </DropdownMenuContent>
-    </DropdownMenu>
-  );
+  return variant === "desktop" ? <Desktop /> : <Mobile />;
 };

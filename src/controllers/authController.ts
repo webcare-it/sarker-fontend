@@ -17,9 +17,7 @@ export const useSignIn = () => {
       setError(phoneValidation.error || "Invalid phone number");
       return;
     }
-
     setError("");
-
     data.set("email", phoneValidation.formattedNumber || phone);
 
     mutate(data);

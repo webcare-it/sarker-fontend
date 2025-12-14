@@ -2,7 +2,11 @@ import { useMutation } from "@tanstack/react-query";
 import { apiErrorHandler } from "../utils/error";
 import { apiClient } from "@/lib/api-client";
 import { toast } from "react-hot-toast";
-import type { MutationType, WithoutDataMutationType } from "../utils/type";
+import type {
+  MutationAuthType,
+  MutationType,
+  WithoutDataMutationType,
+} from "../utils/type";
 import { useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { clearCartFn } from "@/redux/slice/cartSlice";
@@ -19,10 +23,12 @@ export const useSignInMutation = (): MutationType => {
     onSuccess: (res) => {
       if (res?.result && res?.access_token) {
         localStorage.removeItem("guest_user_id");
-        toast.success("Sign in successful");
+        toast.success(res?.message || "Sign in successful");
         localStorage.setItem("token", res?.access_token);
         localStorage.setItem("user_id", res?.user?.id);
         navigate("/");
+      } else {
+        toast.error(res?.message || "Unauthorized");
       }
     },
     onError: (error) => {
@@ -42,7 +48,9 @@ export const useSignUpMutation = (): MutationType => {
     },
     onSuccess: (res) => {
       if (res?.result) {
-        toast.success("Sign up successful! Please login to continue");
+        toast.success(
+          res?.message || "Sign up successful! Please sign in to continue"
+        );
       }
     },
     onError: (error) => {
@@ -64,12 +72,13 @@ export const useSignOutMutation = (): WithoutDataMutationType => {
     },
     onSuccess: (res) => {
       if (res?.result) {
-        toast.success("Sign out successful");
+        toast.success(res?.message || "Sign out successful");
         localStorage.removeItem("token");
         localStorage.removeItem("user_id");
         dispatch(clearCartFn());
         dispatch(clearWishlistFn());
         navigate("/");
+        window.location.reload();
       }
     },
     onError: (error) => {
@@ -92,13 +101,58 @@ export const useSocialSignInMutation = (): MutationType => {
       if (res?.result && res?.access_token) {
         localStorage.removeItem("guest_user_id");
         localStorage.setItem("user_id", res?.user?.id);
-        toast.success("Social Sign in successful");
+        toast.success(res?.message || "Social Sign in successful");
         localStorage.setItem("token", res?.access_token);
         navigate("/");
       }
     },
     onError: (error) => {
       return apiErrorHandler(error);
+    },
+  });
+
+  return { mutate, isPending };
+};
+
+export const useSendOtpMutation = (): MutationType => {
+  const { mutate, isPending } = useMutation({
+    mutationKey: ["send_otp_code"],
+    mutationFn: async (data: unknown) => {
+      const response = await apiClient.post(
+        "/auth/password/forget_request",
+        data
+      );
+      return response.data;
+    },
+  });
+
+  return { mutate, isPending };
+};
+
+export const useVeryMutation = (): MutationType => {
+  const { mutate, isPending } = useMutation({
+    mutationKey: ["verify_code"],
+    mutationFn: async (data: unknown) => {
+      const response = await apiClient.post(
+        "/auth/password/check_verification_code",
+        data
+      );
+      return response.data;
+    },
+  });
+
+  return { mutate, isPending };
+};
+
+export const useResetPasswordMutation = (): MutationAuthType => {
+  const { mutate, isPending } = useMutation({
+    mutationKey: ["reset_confirm_password"],
+    mutationFn: async (data: unknown) => {
+      const response = await apiClient.post(
+        "/auth/password/confirm_reset",
+        data
+      );
+      return response.data;
     },
   });
 

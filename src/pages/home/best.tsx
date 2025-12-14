@@ -1,42 +1,24 @@
-import { useGetProductsForHome } from "@/api/queries/useProducts";
-import { AnimationWrapper } from "@/components/common/animation-wrapper";
-import { CardLayout } from "@/components/common/card-layout";
-import { SectionTitle } from "@/components/common/section-title";
-import { ProductCard, ProductCardSkeleton } from "@/components/card/product";
-import type { ProductType } from "@/type";
+import type { HomePropsType } from "@/type";
 import { useConfig } from "@/hooks/useConfig";
 import { getConfig } from "@/helper";
-import { useTranslation } from "@/hooks/useTranslation";
 
-export const BestSellerSection = () => {
+import { ProductSection } from "@/components/common/product-section";
+
+export const BestSellerSection = ({ isLoading, products }: HomePropsType) => {
   const config = useConfig();
-  const { t } = useTranslation();
-  const { data, isLoading } = useGetProductsForHome("best-seller");
+
   const isShow = getConfig(config, "best_selling")?.value as string;
-  const products = (data?.data as ProductType[]) || [];
 
   return isShow ? (
     <section
-      className={`mb-10 md:mb-20 container mx-auto  ${
+      className={`container mx-auto  ${
         products?.length === 0 && !isLoading && "hidden"
       }`}>
-      <SectionTitle title={t.best_sellers} />
-      <CardLayout>
-        {isLoading
-          ? Array.from({ length: 5 }).map((_, i) => (
-              <ProductCardSkeleton key={i} />
-            ))
-          : products?.map((product, i: number) => (
-              <AnimationWrapper
-                key={product.id}
-                initial={{ opacity: 0, y: 40 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, amount: 0.2 }}
-                transition={{ duration: 0.6, delay: i * 0.05 }}>
-                <ProductCard key={product.id} product={product} />
-              </AnimationWrapper>
-            ))}
-      </CardLayout>
+      <ProductSection
+        title={"Best Sellers"}
+        products={products}
+        isLoading={isLoading}
+      />
     </section>
   ) : null;
 };

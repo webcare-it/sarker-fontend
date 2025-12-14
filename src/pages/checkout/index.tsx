@@ -2,27 +2,52 @@ import { BaseLayout } from "@/components/layout/base-layout";
 import { useSelector } from "react-redux";
 import type { RootStateType } from "@/redux/store";
 import { CartSummary } from "@/components/card/summary";
-import {
-  CreditCard,
-  ShoppingBag,
-  User,
-  Phone,
-  MapPin,
-  MessageSquare,
-} from "lucide-react";
+import { CreditCard } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import {
-  InputGroup,
-  InputGroupAddon,
-  InputGroupInput,
-} from "@/components/ui/input-group";
-import { Label } from "@/components/ui/label";
 import { SectionTitle } from "@/components/common/section-title";
-import { Link } from "react-router-dom";
 import { SeoWrapper } from "@/components/common/seo-wrapper";
+import { ShippingCost } from "./shipping";
+import { PaymentMethods } from "./payment";
+import { CheckoutForm } from "./form";
+import { Spinner } from "@/components/ui/spinner";
+import { cartTotalItems, cartTotalPrice } from "@/helper";
+import { useEffect } from "react";
+import { EmptyCart } from "@/components/common/empty-cart";
+import { useGtmTracker, type PurchaseTrackerType } from "@/hooks/useGtmTracker";
+import { getCookie, setCookie } from "@/lib/cookie";
+import { useCheckoutController } from "@/controllers/checkoutController";
+import { OrderConfirmOtp } from "@/components/common/checkout-otp";
 
 export const CheckoutPage = () => {
+  const { startCheckoutTracker } = useGtmTracker();
   const cart = useSelector((state: RootStateType) => state.cart);
+  const {
+    otp,
+    setOtp,
+    info,
+    setInfo,
+    isPending,
+    otpLoading,
+    isActiveOtp,
+    showOtpModal,
+    handlePlaceOrder,
+    handleOtpSuccess,
+  } = useCheckoutController();
+
+  useEffect(() => {
+    if (cart?.items?.length > 0 && !getCookie("checkout_begin")) {
+      setCookie("checkout_begin", "checkout_begin");
+
+      const trackerData: PurchaseTrackerType = {
+        transaction_id: Math.random().toString(36).substring(2, 15),
+        value: cartTotalPrice(cart?.items || []) || 0,
+        customer_type: "new",
+        items: cartTotalItems(cart?.items || []) || [],
+      };
+      startCheckoutTracker(trackerData);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <>
@@ -31,18 +56,7 @@ export const CheckoutPage = () => {
         <section className="mb-10 md:mb-20 mt-10">
           <SectionTitle title="Checkout" />
           {cart?.items?.length === 0 ? (
-            <div className="text-center py-16">
-              <ShoppingBag className="mx-auto h-16 w-16 text-muted-foreground mb-4" />
-              <h2 className="text-2xl font-bold text-foreground mb-2">
-                Your cart is empty
-              </h2>
-              <p className="text-muted-foreground mb-6">
-                Looks like you haven't added any items to your cart yet.
-              </p>
-              <Button asChild>
-                <Link to="/products">Continue Shopping</Link>
-              </Button>
-            </div>
+            <EmptyCart />
           ) : (
             <div className="grid grid-cols-1 mx-4 md:mx-0 lg:grid-cols-3 gap-4 lg:gap-8">
               <div className="lg:col-span-2">
@@ -50,75 +64,31 @@ export const CheckoutPage = () => {
                   <h3 className="text-lg font-semibold mb-6">
                     Checkout Information
                   </h3>
-                  <form className="space-y-3 md:space-y-4">
-                    <div className="space-y-1 md:space-y-2">
-                      <Label htmlFor="name">Name *</Label>
-                      <InputGroup className="h-9 md:h-10">
-                        <InputGroupAddon>
-                          <User />
-                        </InputGroupAddon>
-                        <InputGroupInput
-                          type="text"
-                          id="name"
-                          name="name"
-                          required
-                          placeholder="Enter your full name"
-                        />
-                      </InputGroup>
-                    </div>
-                    <div className="space-y-1 md:space-y-2">
-                      <Label htmlFor="contact">Phone *</Label>
-                      <InputGroup className="h-9 md:h-10">
-                        <InputGroupAddon>
-                          <Phone />
-                        </InputGroupAddon>
-                        <InputGroupInput
-                          type="text"
-                          id="contact"
-                          name="contact"
-                          required
-                          placeholder="Enter your phone number"
-                        />
-                      </InputGroup>
-                    </div>
-                    <div className="space-y-1 md:space-y-2">
-                      <Label htmlFor="address">Full Address *</Label>
-                      <InputGroup className="h-9 md:h-10">
-                        <InputGroupAddon>
-                          <MapPin />
-                        </InputGroupAddon>
-                        <InputGroupInput
-                          type="text"
-                          id="address"
-                          name="address"
-                          required
-                          placeholder="Enter your full address"
-                        />
-                      </InputGroup>
-                    </div>
-                    <div className="space-y-1 md:space-y-2">
-                      <Label htmlFor="notes">Notes</Label>
-                      <InputGroup className="h-9 md:h-10">
-                        <InputGroupAddon>
-                          <MessageSquare />
-                        </InputGroupAddon>
-                        <InputGroupInput
-                          type="text"
-                          id="notes"
-                          name="notes"
-                          placeholder="Enter any additional notes or comments"
-                        />
-                      </InputGroup>
-                    </div>
-                  </form>
+                  <CheckoutForm info={info} setInfo={setInfo} />
+                  <ShippingCost />
+                  <PaymentMethods />
                 </div>
               </div>
 
               <div className="lg:col-span-1">
-                <CartSummary>
-                  <Button className="w-full mb-4" size="lg">
-                    <CreditCard className="h-5 w-5 mr-2" />
-                    Place Order
+                <CartSummary isShowCartItems={true}>
+                  <Button
+                    className="w-full"
+                    size="lg"
+                    type="button"
+                    disabled={!!otp || isPending || otpLoading}
+                    onClick={handlePlaceOrder}>
+                    {isPending || otpLoading ? (
+                      <>
+                        <Spinner />
+                        <span>Processing...</span>
+                      </>
+                    ) : (
+                      <>
+                        <CreditCard className="h-5 w-5 mr-2" />
+                        <span>Place Order</span>
+                      </>
+                    )}
                   </Button>
                 </CartSummary>
               </div>
@@ -126,6 +96,14 @@ export const CheckoutPage = () => {
           )}
         </section>
       </BaseLayout>
+      {isActiveOtp && showOtpModal && (
+        <OrderConfirmOtp
+          otp={otp}
+          setOtp={setOtp}
+          isPending={isPending}
+          onOtpSuccess={handleOtpSuccess}
+        />
+      )}
     </>
   );
 };

@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { useCategories } from "@/api/queries/useCategories";
 import { getImageUrl, slugify } from "@/helper";
 
@@ -39,9 +40,10 @@ export type SubSubCategoryType = {
 
 export interface MenuItemType {
   name: string;
-  href?: string;
+  href: string;
   submenu?: {
     columns: {
+      href: string;
       title: string;
       links: { name: string; href: string; highlight?: boolean }[];
     }[];
@@ -58,10 +60,10 @@ export const useMenuData = () => {
 
   const categories = data?.data as CategoryType[];
 
-  const transformBackendDataToMenu = (
-    backendData: CategoryType[]
-  ): MenuItemType[] => {
-    return backendData?.map((category) => {
+  const menuData = useMemo(() => {
+    if (!categories) return [];
+
+    return categories.map((category) => {
       if (!category?.sub_categories || category?.sub_categories?.length === 0) {
         return {
           name: category?.name,
@@ -72,10 +74,15 @@ export const useMenuData = () => {
       const columns = category?.sub_categories?.map(
         (subCategory: SubCategoryType) => ({
           title: subCategory?.name,
+          href: `/categories/${category?.id}/${slugify(category?.name)}/${
+            subCategory?.id
+          }/${slugify(subCategory?.name)}`,
           links: subCategory?.sub_sub_categories?.map(
             (subSubCategory: SubSubCategoryType) => ({
               name: subSubCategory?.name,
-              href: `/categories/${subSubCategory?.id}/${slugify(
+              href: `/categories/${category?.id}/${slugify(category?.name)}/${
+                subCategory?.id
+              }/${slugify(subCategory?.name)}/${subSubCategory?.id}/${slugify(
                 subSubCategory?.name
               )}`,
               highlight: false,
@@ -90,20 +97,21 @@ export const useMenuData = () => {
         ?.map((sub: SubCategoryType) => ({
           image: getImageUrl(sub?.banner as string),
           title: sub?.name,
-          link: `/categories/${sub?.id}/${slugify(sub?.name)}`,
+          link: `/categories/${category?.id}/${slugify(category?.name)}/${
+            sub?.id
+          }/${slugify(sub?.name)}`,
         }));
 
       return {
         name: category?.name,
+        href: `/categories/${category?.id}/${slugify(category?.name)}`,
         submenu: {
           columns,
           promos: promos?.length > 0 ? promos : undefined,
         },
       };
     });
-  };
-
-  const menuData = categories ? transformBackendDataToMenu(categories) : [];
+  }, [categories]);
 
   return { menuData, isLoading, error };
 };

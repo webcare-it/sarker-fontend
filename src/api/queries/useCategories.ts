@@ -9,8 +9,8 @@ export const useCategories = (): QueryType => {
       const response = await apiClient.get("/categories");
       return response.data;
     },
-    staleTime: 1000 * 60 * 30,
-    gcTime: 1000 * 60 * 30,
+    staleTime: Infinity,
+    gcTime: Infinity,
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
     refetchOnMount: false,

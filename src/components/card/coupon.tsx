@@ -50,7 +50,7 @@ export const Coupon = ({ couponCode }: { couponCode?: string }) => {
     <div>
       <ButtonGroup className="w-full h-10">
         <Input
-          placeholder="Enter Coupon code"
+          placeholder={"Enter Coupon code"}
           className={cn(
             "h-9 md:h-10",
             couponCode && "cursor-not-allowed bg-accent"
@@ -69,7 +69,7 @@ export const Coupon = ({ couponCode }: { couponCode?: string }) => {
           {loading ? (
             <>
               <Spinner />
-              Processing...
+              {"Processing..."}
             </>
           ) : couponCode ? (
             "Remove"
@@ -80,7 +80,8 @@ export const Coupon = ({ couponCode }: { couponCode?: string }) => {
       </ButtonGroup>
       {couponCode && (
         <div className="text-sm text-green-600 font-medium flex items-center gap-1">
-          Coupon code applied: <span className="font-bold">[{couponCode}]</span>
+          {"Coupon code applied"}:{" "}
+          <span className="font-bold">[{couponCode}]</span>
         </div>
       )}
     </div>

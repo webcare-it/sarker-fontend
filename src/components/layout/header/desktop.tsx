@@ -1,38 +1,59 @@
 import { Heart, ShoppingCart } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ActionSearchBar } from "./search";
 import { UserProfile } from "./user";
 import { useSelector } from "react-redux";
 import type { RootStateType } from "@/redux/store";
 import { MegaMenu } from "./mega-menu";
-import { LanguageSwitcher } from "./language";
 import { Logo } from "./logo";
-
+import { useMemo } from "react";
 export const HeaderDesktop = ({
   isShowMegaMenu,
 }: {
   isShowMegaMenu: boolean;
 }) => {
+  const pathname = useLocation();
   const cart = useSelector((state: RootStateType) => state.cart);
   const wishlist = useSelector((state: RootStateType) => state.wishlist);
 
+  const searchBar = useMemo(() => {
+    return <ActionSearchBar />;
+  }, []);
+
+  const megaMenu = useMemo(() => {
+    return <MegaMenu />;
+  }, []);
+
   return (
-    <nav className="hidden md:block">
-      <div className="h-16 md:flex items-center justify-center w-full px-1 md:px-0 bg-background border-b border-border">
+    <nav className="hidden md:block bg-background">
+      <div className="h-16 md:flex items-center justify-center w-full px-1 md:px-0  border-b border-border">
         <div className="container flex items-center justify-between gap-4">
           <div className="flex items-center gap-3 justify-start">
             <Logo type="DESKTOP" />
           </div>
 
-          <div className="hidden md:flex flex-1 justify-center items-center">
-            <ActionSearchBar />
+          <div className="flex flex-1 justify-center items-center">
+            {searchBar}
           </div>
 
           <div className="flex items-center gap-3 w-full md:w-auto justify-end">
-            <LanguageSwitcher />
+            <Link to="/track-order" title="Track Order">
+              <Button
+                variant="ghost"
+                className={`hover:text-primary ${
+                  pathname.pathname === "/track-order" ? "text-primary" : ""
+                }`}>
+                Track Order
+              </Button>
+            </Link>
             <Link to="/wishlist" title="Wishlist">
-              <Button variant="ghost" size="icon-lg" className="relative">
+              <Button
+                variant="ghost"
+                size="icon-lg"
+                className={`hover:text-primary ${
+                  pathname.pathname === "/wishlist" ? "text-primary" : ""
+                }`}>
                 <div title="Wishlist" className="relative">
                   <Heart className="h-6 w-6" />
                   {wishlist?.items?.length > 0 && (
@@ -46,7 +67,12 @@ export const HeaderDesktop = ({
             </Link>
 
             <Link to="/cart">
-              <Button variant="ghost" size="icon-lg" className="relative">
+              <Button
+                variant="ghost"
+                size="icon-lg"
+                className={`hover:text-primary ${
+                  pathname.pathname === "/cart" ? "text-primary" : ""
+                }`}>
                 <div title="Shopping Cart" className="relative">
                   <ShoppingCart className="h-6 w-6" />
                   {cart?.items?.length > 0 && (
@@ -63,7 +89,7 @@ export const HeaderDesktop = ({
           </div>
         </div>
       </div>
-      {isShowMegaMenu && <MegaMenu />}
+      {isShowMegaMenu && megaMenu}
     </nav>
   );
 };

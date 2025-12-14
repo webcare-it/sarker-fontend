@@ -9,6 +9,7 @@ interface Props {
   name: string;
   label?: string;
   placeholder?: string;
+  disabled?: boolean;
   required?: boolean;
   className?: string;
   onValidationChange?: (isValid: boolean, phone: string) => void;
@@ -19,13 +20,13 @@ export const PhoneInput = ({
   name,
   label = "Phone",
   placeholder = "01XXXXXXXXX",
+  disabled = false,
   required = true,
   className,
   onValidationChange,
 }: Props) => {
   const { phone, touched, handlePhoneChange, handleBlur, isValid, error } =
     usePhoneValidation();
-
   React.useEffect(() => {
     onValidationChange?.(isValid, phone);
   }, [isValid, phone, onValidationChange]);
@@ -38,6 +39,7 @@ export const PhoneInput = ({
           id={id}
           name={name}
           value={phone}
+          disabled={disabled}
           onChange={(e) => handlePhoneChange(e.target.value)}
           onBlur={handleBlur}
           className={cn(
@@ -60,7 +62,7 @@ export const PhoneInput = ({
         )}
 
         {!touched && (
-          <div className="text-sm text-gray-500">
+          <div className="text-sm text-muted-foreground">
             Enter your mobile number (11 digits starting with 01)
           </div>
         )}

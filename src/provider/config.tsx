@@ -1,51 +1,54 @@
 import { useEffect } from "react";
 import { useGetConfig } from "@/api/queries/useGetConfig";
-import { useGetTranslations } from "@/api/queries/useLanguage";
-import { AnimationLoading } from "@/components/common/animation-loading";
 import { ConfigContext, type ConfigType } from "@/hooks/useConfig";
-import { useNavigate } from "react-router-dom";
-import { useDispatch } from "react-redux";
-import { setTranslations } from "@/redux/slice/translateSlice";
 import { getConfig } from "@/helper";
-import { updatePrimaryColor } from "@/lib/chroma";
+import { updatePrimaryColor, updatePrimaryForeground } from "@/lib/chroma";
+import { MaintenancePage } from "@/pages/utils-pages/maintenance";
+import { ServerError } from "@/pages/utils-pages/server";
+import { GoogleOAuthProvider } from "@react-oauth/google";
+import { RootPageLoading } from "@/components/layout/root-loading";
 
 export const ConfigProvider = ({ children }: { children: React.ReactNode }) => {
-  const navigate = useNavigate();
-  const dispatch = useDispatch();
   const { data, isLoading, error } = useGetConfig();
-  const {
-    data: transData,
-    error: translationsError,
-    isLoading: isTranslationsLoading,
-  } = useGetTranslations();
-
-  useEffect(() => {
-    if (!isTranslationsLoading && transData) {
-      const translations = transData?.translations || transData?.fallback || {};
-      dispatch(setTranslations(translations));
-    }
-  }, [transData, dispatch, isTranslationsLoading]);
 
   const config = data?.data as ConfigType[];
   const primaryColor = getConfig(config, "base_color")?.value;
+  const secondaryColor = getConfig(config, "base_hov_color")?.value;
 
   useEffect(() => {
     if (primaryColor && typeof primaryColor === "string") {
       updatePrimaryColor(primaryColor);
     }
-  }, [primaryColor]);
+    if (secondaryColor && typeof secondaryColor === "string") {
+      updatePrimaryForeground(secondaryColor);
+    }
+  }, [primaryColor, secondaryColor]);
 
-  if (error || translationsError) navigate("/error");
+  const isMaintenance = getConfig(config, "maintenance_mode")?.value;
 
-  if (isLoading || isTranslationsLoading) {
-    return (
-      <main className="flex items-center justify-center h-screen w-full">
-        <AnimationLoading />
-      </main>
-    );
+  if (isMaintenance === "1") {
+    return <MaintenancePage />;
   }
 
+  if (error) {
+    return <ServerError />;
+  }
+
+  if (isLoading) {
+    return <RootPageLoading />;
+  }
+
+  const clientId = data?.google_client_id || null;
+
   return (
-    <ConfigContext.Provider value={config}>{children}</ConfigContext.Provider>
+    <ConfigContext.Provider value={config}>
+      {clientId ? (
+        <GoogleOAuthProvider clientId={clientId}>
+          {children}
+        </GoogleOAuthProvider>
+      ) : (
+        <>{children}</>
+      )}
+    </ConfigContext.Provider>
   );
 };

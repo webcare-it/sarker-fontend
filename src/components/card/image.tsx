@@ -6,6 +6,7 @@ import type { ProductDetailsType, ProductType } from "@/type";
 import { Image } from "lucide-react";
 import { useEffect, useState } from "react";
 import { MagnifyImage } from "./magnify";
+import { OptimizedImage } from "../common/optimized-image";
 
 interface Props {
   product: ProductDetailsType;
@@ -41,14 +42,14 @@ export const ImageSection = ({
                   setImg(image?.path);
                 }}
                 className={cn(
-                  "flex-shrink-0 w-12 h-12 md:w-20 md:h-20 rounded-lg overflow-hidden border-2 transition-all",
+                  "flex-shrink-0 cursor-pointer w-12 h-12 md:w-20 md:h-20 rounded-lg overflow-hidden border-2 transition-all",
                   image?.path === img
                     ? "border-primary ring-2 ring-primary/30"
                     : "border-border hover:border-primary/50"
                 )}
                 aria-label={`View image ${index + 1}`}>
-                <img
-                  src={getImageUrl(image?.path)}
+                <OptimizedImage
+                  src={image?.path}
                   alt={`${product?.name} ${index + 1}`}
                   className="w-full h-full object-cover"
                 />

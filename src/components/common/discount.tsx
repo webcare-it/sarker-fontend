@@ -16,7 +16,7 @@ export const Discount = ({ product, type }: Props) => {
       <>
         {isDiscount && (
           <p className="text-sm text-green-600 font-medium">
-            You save {discount}
+            {"You save"} {discount}%
           </p>
         )}
       </>
@@ -29,9 +29,9 @@ export const Discount = ({ product, type }: Props) => {
         <Badge
           className={`${
             type === "DETAILS" && "text-sm font-semibold"
-          } z-10 top-2 left-2 absolute`}
+          } z-10 top-2 left-2 absolute text-primary-foreground`}
           variant="destructive">
-          {discount}
+          {discount}%
         </Badge>
       )}
     </>

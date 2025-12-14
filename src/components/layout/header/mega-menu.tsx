@@ -12,7 +12,7 @@ import {
   NavigationMenuTrigger,
   navigationMenuTriggerStyle,
 } from "@/components/ui/navigation-menu";
-import { getImageUrl } from "@/helper";
+import { isPathActive } from "@/helper";
 import { Skeleton } from "@/components/common/skeleton";
 
 type Props = React.ComponentPropsWithoutRef<"li"> & {
@@ -47,17 +47,17 @@ const MegaMenuListItem = ({
 export const MegaMenu = () => {
   const location = useLocation();
   const pathname = location?.pathname;
+  const { menuData, isLoading } = useMenuData();
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
-  const { menuData, isLoading } = useMenuData();
 
   const checkScrollPosition = () => {
     if (scrollContainerRef.current) {
       const { scrollLeft, scrollWidth, clientWidth } =
         scrollContainerRef.current;
       setCanScrollLeft(scrollLeft > 0);
-      setCanScrollRight(scrollLeft < scrollWidth - clientWidth);
+      setCanScrollRight(scrollLeft < scrollWidth - clientWidth - 1);
     }
   };
 
@@ -87,10 +87,19 @@ export const MegaMenu = () => {
   };
 
   useEffect(() => {
-    checkScrollPosition();
-    const handleResize = () => checkScrollPosition();
+    const timer = setTimeout(() => {
+      checkScrollPosition();
+    }, 100);
+
+    const handleResize = () => {
+      setTimeout(() => checkScrollPosition(), 100);
+    };
+
     window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener("resize", handleResize);
+    };
   }, [menuData]);
 
   if (isLoading) {
@@ -99,7 +108,7 @@ export const MegaMenu = () => {
         <div className="container mx-auto">
           <div className="flex items-center gap-2 justify-center py-1">
             {Array.from({ length: 10 }).map((_, index) => (
-              <Skeleton key={index} className="w-32 h-7 rounded" />
+              <Skeleton key={index} className="w-36 h-8 rounded" />
             ))}
           </div>
         </div>
@@ -141,99 +150,131 @@ export const MegaMenu = () => {
             )}
           </AnimatePresence>
 
-          <NavigationMenu>
-            <div className="relative overflow-hidden">
+          <NavigationMenu className="justify-start">
+            <div className="relative overflow-hidden w-full">
               <div
                 ref={scrollContainerRef}
                 onScroll={checkScrollPosition}
-                className="scrollbar-hide overflow-x-auto"
-                style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}>
-                <NavigationMenuList className="flex items-center py-0.5">
-                  {menuData?.map((item) => (
-                    <NavigationMenuItem
-                      key={item?.name}
-                      className="text-nowrap">
-                      {item?.submenu ? (
-                        <>
-                          <NavigationMenuTrigger className="font-medium hover:text-primary transition-colors hover:underline cursor-pointer">
-                            {item?.name}
-                          </NavigationMenuTrigger>
+                className="scrollbar-hide overflow-x-auto pr-12">
+                <NavigationMenuList className="flex items-center py-0.5 justify-start">
+                  {menuData
+                    ?.filter((item) => item && item?.name)
+                    ?.map((item, index) => {
+                      if (!item || !item?.name) {
+                        return null;
+                      }
 
-                          <NavigationMenuContent>
-                            <div className="bg-background rounded md:w-[768px] lg:w-[1024px] xl:w-[1280px] 2xl:w-[1536px] mx-auto max-h-[600px] overflow-y-auto overflow-x-auto">
-                              <div className="flex gap-6 p-5 w-full overflow-x-auto">
-                                {item?.submenu?.columns?.map((column, idx) => (
-                                  <div
-                                    key={idx}
-                                    className="flex-1 min-w-[180px]">
-                                    <h3 className="font-bold text-primary mb-4 line-clamp-1">
-                                      {column?.title}
-                                    </h3>
-                                    <ul className="space-y-2">
-                                      {column?.links?.map((link, linkIdx) => (
-                                        <MegaMenuListItem
-                                          key={linkIdx}
-                                          title={link?.name}
-                                          href={link?.href}
-                                          highlight={pathname === link?.href}
-                                          onClick={closeMenu}
-                                        />
-                                      ))}
-                                    </ul>
-                                  </div>
-                                ))}
-                                {item?.submenu?.promos && (
-                                  <div className="w-80 flex-shrink-0 space-y-4">
-                                    {item?.submenu?.promos?.map(
-                                      (promo, idx) => (
-                                        <Link
+                      return (
+                        <NavigationMenuItem
+                          key={item?.name || `item-${index}`}
+                          className="text-nowrap flex-shrink-0">
+                          {item?.submenu ? (
+                            <>
+                              <NavigationMenuTrigger
+                                className={`font-medium hover:text-primary transition-colors hover:underline cursor-pointer text-muted-foreground ${
+                                  isPathActive(pathname, item?.href)
+                                    ? "text-primary"
+                                    : "text-muted-foreground"
+                                }`}>
+                                <Link to={item?.href} className="w-full h-full">
+                                  {item?.name}
+                                </Link>
+                              </NavigationMenuTrigger>
+
+                              <NavigationMenuContent>
+                                <div className="bg-background rounded md:w-[768px] lg:w-[1024px] xl:w-[1280px] 2xl:w-[1536px] mx-auto max-h-[600px] overflow-y-auto overflow-x-auto">
+                                  <div className="flex gap-6 p-5 w-full overflow-x-auto">
+                                    {item?.submenu?.columns?.map(
+                                      (column, idx) => (
+                                        <div
                                           key={idx}
-                                          to={promo?.link}
-                                          onClick={closeMenu}
-                                          className="block group">
-                                          <div className="w-80 h-48 object-cover relative overflow-hidden rounded-lg">
-                                            {promo?.image ? (
-                                              <img
-                                                src={getImageUrl(promo?.image)}
-                                                alt={promo?.title}
-                                                className="absolute top-0 left-0 w-full h-full object-cover transition-transform group-hover:scale-105"
-                                                loading="lazy"
-                                                crossOrigin="anonymous"
-                                              />
-                                            ) : (
-                                              <div className="absolute w-full h-full bg-gray-200 animate-pulse">
-                                                <Image className="w-full h-full object-cover" />
-                                              </div>
+                                          className="flex-1 min-w-[180px]">
+                                          <Link
+                                            to={column?.href}
+                                            className={`font-bold mb-4 line-clamp-1 hover:underline hover:text-primary ${
+                                              isPathActive(
+                                                pathname,
+                                                column?.href
+                                              )
+                                                ? "text-primary"
+                                                : "text-muted-foreground"
+                                            }`}>
+                                            {column?.title}
+                                          </Link>
+                                          <ul className="space-y-2">
+                                            {column?.links?.map(
+                                              (link, linkIdx) => (
+                                                <MegaMenuListItem
+                                                  key={linkIdx}
+                                                  title={link?.name}
+                                                  href={link?.href}
+                                                  highlight={isPathActive(
+                                                    pathname,
+                                                    link?.href
+                                                  )}
+                                                  onClick={closeMenu}
+                                                />
+                                              )
                                             )}
-                                            <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-4">
-                                              <p className="text-white font-semibold line-clamp-1">
-                                                {promo?.title}
-                                              </p>
-                                            </div>
-                                          </div>
-                                        </Link>
+                                          </ul>
+                                        </div>
                                       )
                                     )}
+                                    {item?.submenu?.promos && (
+                                      <div className="w-80 flex-shrink-0 space-y-4">
+                                        {item?.submenu?.promos?.map(
+                                          (promo, idx) => (
+                                            <Link
+                                              key={idx}
+                                              to={promo?.link}
+                                              onClick={closeMenu}
+                                              className="block group">
+                                              <div className="w-80 h-48 object-cover relative overflow-hidden rounded-lg">
+                                                {promo?.image ? (
+                                                  <img
+                                                    src={promo?.image}
+                                                    alt={promo?.title}
+                                                    className="absolute top-0 left-0 w-full h-full object-cover transition-transform group-hover:scale-105"
+                                                  />
+                                                ) : (
+                                                  <div className="absolute w-full h-full bg-gray-200 animate-pulse">
+                                                    <Image className="w-full h-full object-cover" />
+                                                  </div>
+                                                )}
+                                                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-4">
+                                                  <p className="text-white font-semibold line-clamp-1">
+                                                    {promo?.title}
+                                                  </p>
+                                                </div>
+                                              </div>
+                                            </Link>
+                                          )
+                                        )}
+                                      </div>
+                                    )}
                                   </div>
-                                )}
-                              </div>
-                            </div>
-                          </NavigationMenuContent>
-                        </>
-                      ) : (
-                        <NavigationMenuLink
-                          asChild
-                          className={navigationMenuTriggerStyle()}>
-                          <Link
-                            to={item?.href as string}
-                            onClick={closeMenu}
-                            className="font-medium hover:text-primary transition-colors hover:underline cursor-pointer">
-                            {item?.name}
-                          </Link>
-                        </NavigationMenuLink>
-                      )}
-                    </NavigationMenuItem>
-                  ))}
+                                </div>
+                              </NavigationMenuContent>
+                            </>
+                          ) : (
+                            <NavigationMenuLink
+                              asChild
+                              className={navigationMenuTriggerStyle()}>
+                              <Link
+                                to={item?.href as string}
+                                onClick={closeMenu}
+                                className={`font-medium hover:text-primary transition-colors hover:underline cursor-pointer ${
+                                  isPathActive(pathname, item?.href)
+                                    ? "text-primary"
+                                    : "text-muted-foreground"
+                                }`}>
+                                {item?.name || `Category ${index + 1}`}
+                              </Link>
+                            </NavigationMenuLink>
+                          )}
+                        </NavigationMenuItem>
+                      );
+                    })}
                 </NavigationMenuList>
               </div>
             </div>

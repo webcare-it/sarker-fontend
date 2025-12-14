@@ -5,22 +5,26 @@ import { BaseLayout } from "@/components/layout/base-layout";
 import { SeoWrapper } from "@/components/common/seo-wrapper";
 import { useCategories } from "@/api/queries/useCategories";
 import { CategoryCard, CategoryCardSkeleton } from "@/components/card/category";
+import { MobileCategory } from "@/components/card/mobile-category";
 import type { CategoryType } from "@/components/layout/header/useMenu";
 
 export const CategoriesPage = () => {
   const { data, isLoading } = useCategories();
-
   const categories = (data?.data as CategoryType[]) || [];
 
   return (
     <>
-      <SeoWrapper title={"All Categories"} />
+      <SeoWrapper title="All Categories" />
 
       <BaseLayout>
         <section className="mb-10 md:mb-20 container mx-auto mt-6 md:mt-10">
-          <SectionTitle title={"All Categories"} />
+          <SectionTitle title="All Categories" />
 
-          <div className="grid grid-cols-2 gap-2 md:gap-4 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7 mt-6 mx-4 md:mx-0">
+          <div className="block md:hidden mt-6 mx-4">
+            <MobileCategory categories={categories} isLoading={isLoading} />
+          </div>
+
+          <div className="hidden md:grid grid-cols-2 gap-2 md:gap-4 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7 mt-6 mx-4 md:mx-0">
             {isLoading ? (
               Array.from({ length: 14 }).map((_, i) => (
                 <CategoryCardSkeleton key={i} />
@@ -38,7 +42,7 @@ export const CategoriesPage = () => {
               ))
             ) : (
               <div className="col-span-full">
-                <NoDataFound title="No categories found" />
+                <NoDataFound title={"No categories found"} />
               </div>
             )}
           </div>

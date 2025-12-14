@@ -1,12 +1,12 @@
-import { IMAGE_URL } from "@/constant";
 import type { ConfigType } from "@/hooks/useConfig";
 import type {
   ProductDetailsType,
   ProductType,
   StateSyncType,
+  UserType,
   VariantType,
 } from "@/type";
-import { v4 as uuidv4 } from "uuid";
+import { IMAGE_URL } from "../constant";
 
 export const getImageUrl = (url: string) => {
   return `${IMAGE_URL}${url}`;
@@ -25,7 +25,26 @@ export const isExistingItem = (
 };
 
 export const getUUID = () => {
-  return uuidv4();
+  return crypto.randomUUID();
+};
+
+export const setLocalStorage = (key: string, value: string) => {
+  if (typeof window !== "undefined") {
+    localStorage.setItem(key, value);
+  }
+};
+
+export const getLocalStorage = (key: string) => {
+  if (typeof window !== "undefined") {
+    const value = localStorage.getItem(key);
+    return value ? JSON.parse(value) : null;
+  }
+};
+
+export const removeLocalStorage = (key: string) => {
+  if (typeof window !== "undefined") {
+    localStorage.removeItem(key);
+  }
 };
 
 export const slugify = (text: string): string => {
@@ -76,6 +95,30 @@ export const getConfig = (config: ConfigType[] = [], key: string) => {
   return result;
 };
 
+export const getFormattedBanner = (
+  banners: unknown | null,
+  links: string[] | null
+) => {
+  if (!Array.isArray(banners) || banners.length === 0) {
+    return [];
+  }
+
+  const b = banners
+    .map((item) => (typeof item === "string" ? item : ""))
+    .filter((item) => item !== null && item !== undefined && item !== "");
+
+  if (b.length === 0) {
+    return [];
+  }
+
+  const result = b.map((banner, idx) => ({
+    image: banner,
+    link: links ? links[idx] || "" : "",
+  }));
+
+  return result;
+};
+
 export const htmlToPlainText = (html: string | null | undefined): string => {
   if (!html || html === null || html === undefined) {
     return "";
@@ -107,14 +150,31 @@ export const getUserId = () => {
   return null;
 };
 
-export const getLangCode = () => {
+export const getSelectedShippingMethod = () => {
   if (typeof window !== "undefined") {
-    const code = localStorage.getItem("code");
-    return code;
+    const result = localStorage.getItem("selected_shipping_method");
+    return result || "";
   }
-  return null;
+  return "";
 };
 
+export const getSelectedPaymentMethod = () => {
+  if (typeof window !== "undefined") {
+    const result = localStorage.getItem("selected_payment_method");
+    return result || "";
+  }
+  return "";
+};
+
+export const keyToValue = (key: string): string => {
+  if (!key || key === null || key === undefined) {
+    return "";
+  }
+  return key
+    .replace(/_/g, " ")
+    .replace(/\b\w/g, (char) => char.toUpperCase())
+    .trim();
+};
 export const isAuthenticated = () => {
   if (typeof window !== "undefined") {
     const token = localStorage.getItem("token");
@@ -178,17 +238,17 @@ export const getYouTubeEmbedUrl = (url: string): string | null => {
 
 export const getUniqueColors = (product: ProductDetailsType): string[] => {
   if (!product?.variants || product?.variants?.length === 0) return [];
-  const colors = product.variants
-    .map((variant) => variant?.color_name)
-    .filter((color) => color && color.trim() !== "");
+  const colors = product?.variants
+    ?.map((variant) => variant?.color_code)
+    ?.filter((color) => color && color.trim() !== "");
   return [...new Set(colors)];
 };
 
 export const getUniqueSizes = (product: ProductDetailsType): string[] => {
   if (!product?.variants || product?.variants?.length === 0) return [];
-  const sizes = product.variants
-    .map((variant) => variant?.size_name)
-    .filter((size) => size && size.trim() !== "");
+  const sizes = product?.variants
+    ?.map((variant) => variant?.size_name)
+    ?.filter((size) => size && size.trim() !== "");
   return [...new Set(sizes)];
 };
 
@@ -202,7 +262,7 @@ export const findVariantByColorAndSize = (
 
   return (
     product?.variants?.find(
-      (variant) => variant?.color_name === color && variant?.size_name === size
+      (variant) => variant?.color_code === color && variant?.size_name === size
     ) || null
   );
 };
@@ -288,21 +348,117 @@ export const hasDiscount = (
   mainPrice: string,
   strokedPrice: string
 ): number => {
-  if (removeCurrencySymbol(strokedPrice) > removeCurrencySymbol(mainPrice)) {
-    return removeCurrencySymbol(strokedPrice) - removeCurrencySymbol(mainPrice);
+  const originalPrice = removeCurrencySymbol(strokedPrice);
+  const currentPrice = removeCurrencySymbol(mainPrice);
+
+  if (originalPrice > currentPrice && originalPrice > 0) {
+    const amountSaved = originalPrice - currentPrice;
+    const percentage = Math.round((amountSaved / originalPrice) * 100);
+    return percentage > 0 ? percentage : 0;
   }
   return 0;
 };
 
 type MergedType = string | null;
-export const getVariant = (color: MergedType, size: MergedType): MergedType => {
+export const getVariant = (
+  color: MergedType,
+  size: MergedType,
+  variants: VariantType[]
+): MergedType => {
+  const getColorName = (color: string, variants: VariantType[]) => {
+    const colorVariant = variants?.find((v) => v?.color_code === color);
+    return colorVariant?.color_name;
+  };
   if (color && size) {
-    return `${color}-${size}`;
+    const colorName = getColorName(color, variants);
+    if (colorName) {
+      return `${colorName}-${size}`;
+    } else {
+      return null;
+    }
   } else if (color && !size) {
-    return color;
+    const colorName = getColorName(color, variants);
+    if (colorName) {
+      return colorName;
+    } else {
+      return null;
+    }
   } else if (!color && size) {
     return size;
   } else {
     return null;
   }
+};
+
+export const getProfileImage = (user: UserType) => {
+  if (isAuthenticated()) {
+    if (user?.provider_id === "google" && user?.avatar) {
+      return user?.avatar;
+    }
+    return user?.avatar_original
+      ? getImageUrl(user?.avatar_original as string)
+      : undefined;
+  }
+  return undefined;
+};
+
+export const isPathActive = (
+  currentPath: string,
+  menuPath: string
+): boolean => {
+  if (currentPath === menuPath) return true;
+
+  if (
+    menuPath.startsWith("/categories/") &&
+    currentPath.startsWith(menuPath + "/")
+  ) {
+    return true;
+  }
+
+  if (
+    menuPath.startsWith("/dashboard/") &&
+    currentPath.startsWith(menuPath + "/")
+  ) {
+    return true;
+  }
+
+  return false;
+};
+
+export const isValidEmail = (email: string): boolean => {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(email);
+};
+
+export const cartTotalPrice = (items: StateSyncType[]) => {
+  return items?.reduce((acc, item) => acc + (item.mainPrice || 0), 0) || 0;
+};
+
+export const cartTotalItems = (items: StateSyncType[]) => {
+  return (
+    items?.map((item) => ({
+      item_id: item?.id?.toString() || "",
+      item_name: item?.name || "",
+      item_price: item?.mainPrice || 0,
+      item_category: item?.category_name || "",
+      item_quantity: item?.quantity || 1,
+    })) || []
+  );
+};
+
+export const normalizeCategoryData = (data: unknown): unknown[] => {
+  if (
+    data &&
+    typeof data === "object" &&
+    "data" in data &&
+    Array.isArray((data as { data: unknown[] }).data)
+  ) {
+    return (data as { data: unknown[] }).data;
+  }
+
+  if (Array.isArray(data)) {
+    return data;
+  }
+
+  return [];
 };

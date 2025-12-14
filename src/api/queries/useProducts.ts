@@ -1,9 +1,8 @@
 import { apiClient } from "@/lib/api-client";
-import { useQuery, useQueries } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import type { QueryType } from "../utils/type";
 import { useNavigate, useParams } from "react-router-dom";
-import { getConfig } from "@/helper";
-import { useConfig } from "@/hooks/useConfig";
+import type { FlashDealType, ProductType } from "@/type";
 
 export const useGetProductsForHome = (
   type: string,
@@ -20,8 +19,44 @@ export const useGetProductsForHome = (
   return { data, isLoading, error };
 };
 
-export const useGetProductsByCategory = (): QueryType => {
+interface FlashDealResponse {
+  data: {
+    flash_deal: { data: FlashDealType[] };
+    products: { data: ProductType[] };
+  };
+  isLoading: boolean;
+  error: unknown;
+}
+
+export const useGetProductsByFlashDeal = (): FlashDealResponse => {
+  const navigate = useNavigate();
   const { id } = useParams();
+  if (!id) navigate("/");
+
+  const { data, isLoading, error } = useQuery({
+    queryKey: ["get_products_by_flash_deal", id],
+    queryFn: async () => {
+      const response = await apiClient.get(`/flash-deal-products/${id}`);
+      return response.data;
+    },
+  });
+
+  return { data, isLoading, error };
+};
+
+export const useGetCategoryProductsForHome = () => {
+  const { data, isLoading, error } = useQuery({
+    queryKey: ["get_category_products_for_home"],
+    queryFn: async () => {
+      const response = await apiClient.get(`/home/categories/products`);
+      return response.data;
+    },
+  });
+
+  return { data, isLoading, error };
+};
+
+export const useGetProductsByCategory = (id: string): QueryType => {
   const navigate = useNavigate();
 
   if (!id) navigate("/");
@@ -35,47 +70,6 @@ export const useGetProductsByCategory = (): QueryType => {
   });
 
   return { data, isLoading, error };
-};
-
-export const useProductsByCategoryHome = () => {
-  const config = useConfig();
-  const configValue = getConfig(config, "home_categories")?.value as string;
-  const categories = configValue ? JSON.parse(configValue as string) : [];
-
-  const categoryQueries = useQueries({
-    queries:
-      categories?.map((id: unknown) => ({
-        queryKey: ["get_products_by_category", id],
-        queryFn: async () => {
-          const response = await apiClient.get(`/products/category/${id}`);
-          return response.data;
-        },
-        enabled: !!id && categories.length > 0,
-      })) || [],
-  });
-
-  if (!categories || !Array.isArray(categories) || categories.length === 0)
-    return { data: [], isLoading: false, error: null };
-
-  const isLoading = categoryQueries?.some((query) => query?.isLoading);
-  const error = categoryQueries?.find((query) => query?.error)?.error;
-  const data = categoryQueries?.map((query, index) => ({
-    categoryId: categories[index],
-    data: query?.data,
-    isLoading: query?.isLoading,
-    error: query?.error,
-  }));
-
-  return { data, isLoading, error } as {
-    data: Array<{
-      categoryId: unknown;
-      data: unknown;
-      isLoading: boolean;
-      error: unknown;
-    }>;
-    isLoading: boolean;
-    error: unknown;
-  };
 };
 
 export const useGetAllProducts = (
@@ -117,6 +111,22 @@ export const useGetRelatedProducts = (): QueryType => {
     queryKey: ["get_related_products", id],
     queryFn: async () => {
       const response = await apiClient.get(`/products/related/${id}`);
+      return response.data;
+    },
+  });
+
+  return { data, isLoading, error };
+};
+
+export const useGetProductsByBrand = (): QueryType => {
+  const { id } = useParams();
+  const navigate = useNavigate();
+  if (!id) navigate("/");
+
+  const { data, isLoading, error } = useQuery({
+    queryKey: ["get_products_by_brand", id],
+    queryFn: async () => {
+      const response = await apiClient.get(`/products/brand/${id}`);
       return response.data;
     },
   });

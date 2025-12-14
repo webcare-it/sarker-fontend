@@ -11,6 +11,7 @@ import { isAuthenticated, isExistingItem } from "@/helper";
 import { Button } from "../ui/button";
 import { toast } from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
+import { TooltipWrapper } from "./tooltip-wrapper";
 
 interface Props {
   product: ProductType;
@@ -79,16 +80,7 @@ export const WishlistButton = ({
       <Button
         variant="ghost"
         size="sm"
-        onClick={() => {
-          if (isWishListed) {
-            fnRemoveWishlist();
-          } else {
-            fnAddToWishlist();
-            if (onRemove) {
-              onRemove();
-            }
-          }
-        }}
+        onClick={handleCartButton}
         disabled={addLoading || removeLoading}
         className={cn(
           "text-muted-foreground hover:text-red-600 hover:bg-red-50 p-2",
@@ -121,28 +113,30 @@ export const WishlistButton = ({
           removeLoading ? "opacity-50 cursor-not-allowed" : ""
         )}>
         <Trash2 className="h-4 w-4 md:mr-2" />
-        <span className="hidden md:block">Remove</span>
+        <span className="hidden md:block">"Remove"</span>
       </Button>
     );
   }
 
   return (
-    <button
-      onClick={isWishListed ? fnRemoveWishlist : fnAddToWishlist}
-      disabled={addLoading || removeLoading}
-      className={`absolute right-2 top-2 z-10 flex h-7 w-7 items-center justify-center rounded-full bg-accent backdrop-blur-sm transition-all hover:bg-background hover:scale-110 cursor-pointer ${
-        addLoading || removeLoading ? "opacity-50 cursor-not-allowed" : ""
-      }`}
-      aria-label="Add to wishlist"
-      title="Add to wishlist">
-      <Heart
-        className={cn(
-          "h-4 w-4 transition-all",
-          isWishListed
-            ? "fill-red-500 text-red-500"
-            : "text-muted-foreground hover:text-red-500"
-        )}
-      />
-    </button>
+    <TooltipWrapper text={"Sign in to add to your wishlist"}>
+      <button
+        onClick={isWishListed ? fnRemoveWishlist : fnAddToWishlist}
+        disabled={addLoading || removeLoading}
+        className={`absolute right-2 top-2 z-10 flex h-7 w-7 items-center justify-center rounded-full bg-accent backdrop-blur-sm transition-all hover:bg-background hover:scale-110 cursor-pointer ${
+          addLoading || removeLoading ? "opacity-50 cursor-not-allowed" : ""
+        }`}
+        aria-label="Add to wishlist"
+        title="Add to wishlist">
+        <Heart
+          className={cn(
+            "h-4 w-4 transition-all",
+            isWishListed
+              ? "fill-red-500 text-red-500"
+              : "text-muted-foreground hover:text-red-500"
+          )}
+        />
+      </button>
+    </TooltipWrapper>
   );
 };

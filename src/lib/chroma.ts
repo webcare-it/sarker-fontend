@@ -4,16 +4,16 @@ const hexToOklchChroma = (hexColor: string): string => {
   try {
     const color = chroma(hexColor);
     const oklch = color.oklch();
-    return `oklch(${oklch[0].toFixed(3)} ${oklch[1].toFixed(
-      3
-    )} ${oklch[2].toFixed(1)})`;
-  } catch (error) {
-    console.error("Error converting hex to OKLCH with chroma-js:", error);
+    const hue = isNaN(oklch[2]) || !isFinite(oklch[2]) ? 0 : oklch[2];
+    return `oklch(${oklch[0].toFixed(3)} ${oklch[1].toFixed(3)} ${hue.toFixed(
+      1
+    )})`;
+  } catch {
     return hexColor;
   }
 };
 
-const getOklchValues = (
+export const getOklchValues = (
   hexColor: string
 ): { l: number; c: number; h: number } | null => {
   try {
@@ -24,8 +24,7 @@ const getOklchValues = (
       c: oklch[1],
       h: oklch[2],
     };
-  } catch (error) {
-    console.error("Error getting OKLCH values:", error);
+  } catch {
     return null;
   }
 };
@@ -35,19 +34,18 @@ export const updatePrimaryColor = (hexColor: string) => {
 
   const oklchColor = hexToOklchChroma(hexColor);
 
-  const oklchValues = getOklchValues(hexColor);
-  const lightness = oklchValues?.l || 0.5;
-
   const root = document.documentElement;
   root.style.setProperty("--primary", oklchColor);
   root.style.setProperty("--ring", oklchColor);
   root.style.setProperty("--sidebar-primary", oklchColor);
   root.style.setProperty("--sidebar-ring", oklchColor);
+};
 
-  const isLight = lightness > 0.5;
-  const foregroundColor = isLight
-    ? "oklch(0.141 0.005 285.823)"
-    : "oklch(0.98 0.016 73.684)";
-  root.style.setProperty("--primary-foreground", foregroundColor);
-  root.style.setProperty("--sidebar-primary-foreground", foregroundColor);
+export const updatePrimaryForeground = (hexColor: string) => {
+  if (typeof window === "undefined") return;
+
+  const root = document.documentElement;
+
+  const oklchColor = hexToOklchChroma(hexColor);
+  root.style.setProperty("--primary-foreground", oklchColor);
 };

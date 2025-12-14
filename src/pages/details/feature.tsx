@@ -1,4 +1,5 @@
 import { Card } from "@/components/ui/card";
+
 import { DollarSign, Truck, CreditCard, CheckCircle } from "lucide-react";
 
 interface FeatureCard {
@@ -8,36 +9,35 @@ interface FeatureCard {
   description: string;
 }
 
-const featureData: FeatureCard[] = [
-  {
-    id: "money-back",
-    icon: DollarSign,
-    title: "Money back guaranty!",
-    description: "We Offer competitive price.",
-  },
-  {
-    id: "fast-delivery",
-    icon: Truck,
-    title: "Fast Delivery",
-    description: "Faster delivery on selected items.",
-  },
-  {
-    id: "safe-payments",
-    icon: CreditCard,
-    title: "Safe payments",
-    description: "Safe payments method",
-  },
-  {
-    id: "authentic-products",
-    icon: CheckCircle,
-    title: "100% Authentic products",
-    description: "We provide authentic products.",
-  },
-];
-
 export const FeatureCards = () => {
+  const featureData: FeatureCard[] = [
+    {
+      id: "money-back",
+      icon: DollarSign,
+      title: "Money back guaranty!",
+      description: "We Offer competitive price.",
+    },
+    {
+      id: "fast-delivery",
+      icon: Truck,
+      title: "Fast Delivery",
+      description: "Faster delivery on selected items.",
+    },
+    {
+      id: "safe-payments",
+      icon: CreditCard,
+      title: "Safe payments",
+      description: "Safe payments method",
+    },
+    {
+      id: "authentic-products",
+      icon: CheckCircle,
+      title: "100% Authentic products",
+      description: "We provide authentic products.",
+    },
+  ];
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+    <div className="grid grid-cols-2 md:grid-cols-2 gap-4 mt-4">
       {featureData.map((feature) => {
         const IconComponent = feature.icon;
         return (

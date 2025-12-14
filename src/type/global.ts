@@ -14,5 +14,7 @@ declare global {
         options: { scope: string }
       ) => void;
     };
+    dataLayer?: unknown[];
+    gtag?: (...args: unknown[]) => void;
   }
 }

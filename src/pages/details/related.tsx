@@ -8,20 +8,23 @@ import { AnimationWrapper } from "@/components/common/animation-wrapper";
 
 export const RelatedProducts = () => {
   const { id } = useParams();
+
   const { data, isLoading } = useGetRelatedProducts();
   const products = (data?.data as ProductType[]) || [];
+
   return (
     <section
       className={`mb-10 md:mb-20 container mx-auto mt-10 ${
         (products?.length === 0 && !isLoading && "hidden") || (!id && "hidden")
       }`}>
-      <SectionTitle title="Related Products" />
+      <SectionTitle title={"Related Products"} />
       <CardLayout>
         {isLoading
           ? Array.from({ length: 5 }).map((_, i) => (
               <ProductCardSkeleton key={i} />
             ))
-          : products?.map((product, i: number) => (
+          : products?.length > 0 &&
+            products?.map((product, i: number) => (
               <AnimationWrapper
                 key={product.id}
                 initial={{ opacity: 0, y: 40 }}

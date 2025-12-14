@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
 import { Skeleton } from "./skeleton";
+import { Button } from "../ui/button";
 
 interface Props {
   title: string;
@@ -13,14 +14,13 @@ export const SectionTitle = ({
   title,
   linkText,
   href,
-  className = "",
+  className = "mb-6 md:mb-8",
 }: Props) => {
   return (
     <div
-      className={`flex flex-wrap md:justify-between items-start sm:items-end md:gap-2 mb-6 md:mb-8 px-4 md:px-0 ${className}`}>
+      className={`flex flex-wrap justify-between items-center md:gap-2 px-4 md:px-0 ${className}`}>
       <h2 className="text-lg font-bold md:text-3xl lg:text-4xl text-primary tracking-tight flex">
         {title}
-        <span className="w-16 md:w-28 h-0.5 md:h-1 bg-primary rounded-full mt-5 md:mt-8" />
       </h2>
 
       {linkText && href && (
@@ -31,6 +31,52 @@ export const SectionTitle = ({
           <ArrowRight className="w-6 h-4 group-hover:translate-x-1 transition-transform" />
         </Link>
       )}
+    </div>
+  );
+};
+
+interface NewProps {
+  title: string;
+  className?: string;
+  children?: React.ReactNode;
+  href?: string;
+}
+
+export const HomeSectionTitle = ({
+  title,
+  className = "mb-6 md:mb-8",
+  href,
+  children,
+}: NewProps) => {
+  return (
+    <>
+      <div
+        className={`flex justify-center items-center md:gap-2 px-4 md:px-0 ${className}`}>
+        <h2 className="text-lg line-clamp-1 font-bold md:text-3xl lg:text-4xl text-primary tracking-tight flex">
+          {title}
+        </h2>
+      </div>
+      {children ? children : null}
+      {href && (
+        <div className="flex justify-center items-center mt-4">
+          <Link to={href}>
+            <Button>
+              View All
+              <ArrowRight className="w-6 h-4 group-hover:translate-x-1 transition-transform" />
+            </Button>
+          </Link>
+        </div>
+      )}
+    </>
+  );
+};
+
+export const HomeSectionTitleSkeleton = () => {
+  return (
+    <div className="flex justify-center items-center md:gap-2 px-4 md:px-0">
+      <h2 className="text-lg line-clamp-1 font-bold md:text-3xl lg:text-4xl text-primary tracking-tight flex">
+        <Skeleton className="h-7 md:h-9 lg:h-14 w-[250px] md:w-[300px] lg:w-[400px] rounded-lg" />
+      </h2>
     </div>
   );
 };

@@ -7,6 +7,8 @@ import {
   truncateText,
 } from "@/helper";
 import { useConfig } from "@/hooks/useConfig";
+import { useGtmTracker, type ItemTrackerType } from "@/hooks/useGtmTracker";
+import { useEffect, useRef } from "react";
 
 export const ProductDetailsSeo = ({
   product,
@@ -14,7 +16,27 @@ export const ProductDetailsSeo = ({
   product: ProductDetailsType;
 }) => {
   const config = useConfig();
+  const hasTracked = useRef(false);
+  const { viewItemTracker } = useGtmTracker();
   const siteName = getConfig(config, "website_name")?.value as string;
+
+  useEffect(() => {
+    if (product && product?.id && !hasTracked.current) {
+      const trackerData: ItemTrackerType = {
+        item_id: product?.id.toString(),
+        item_name: product?.name,
+        item_price: product?.calculable_price || 0,
+        item_quantity: 1,
+        item_variant: product?.variants?.[0]?.variant_name || null,
+        item_brand: product?.brand?.name || null,
+        item_category: product?.category_name,
+      };
+
+      viewItemTracker(trackerData);
+
+      hasTracked.current = true;
+    }
+  }, [product, viewItemTracker]);
 
   return (
     <Helmet>
@@ -24,7 +46,6 @@ export const ProductDetailsSeo = ({
       <meta
         name="description"
         content={truncateText(htmlToPlainText(product?.description))}
-        title={product?.name}
       />
       <meta name="keywords" content={product?.tags?.join(", ")} />
       <meta

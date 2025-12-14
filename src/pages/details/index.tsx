@@ -8,8 +8,10 @@ import { BreadcrumbWrapper } from "@/components/common/breadcrumb-wrapper";
 import { ProductTabs } from "@/pages/details/tabs";
 import { useNavigate, useParams } from "react-router-dom";
 import { ProductDetailsSeo } from "./seo";
-import { ImageSection } from "@/components/card/image";
 import { ProductInfo } from "./info";
+
+import { getImageUrl } from "@/helper";
+import { ImageGallery } from "@/components/common/image-gallery";
 import { useState } from "react";
 
 export interface ProductDetailsResponse {
@@ -21,6 +23,7 @@ export interface ProductDetailsResponse {
 export const ProductDetailsPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+
   const [selectedVariantImage, setSelectedVariantImage] = useState<
     string | null
   >(null);
@@ -30,11 +33,11 @@ export const ProductDetailsPage = () => {
     error: unknown;
   };
 
+  const product: ProductDetailsType = data?.data?.[0] as ProductDetailsType;
+
   if (isLoading) return <ProductDetailsSkeleton />;
 
   if (!data?.data?.[0]) navigate("/products");
-
-  const product: ProductDetailsType = data?.data?.[0] as ProductDetailsType;
 
   return (
     <>
@@ -43,15 +46,22 @@ export const ProductDetailsPage = () => {
         <BreadcrumbWrapper
           className="my-10 mx-4 md:mx-auto"
           items={[
-            { title: "Products", path: "/products" },
+            {
+              title: "Products",
+              path: "/products",
+            },
             { title: product?.name },
           ]}
         />
         <div className="grid grid-cols-1 md:grid-cols-12 gap-8 md:gap-8 mx-4 md:mx-auto">
           <div className="md:col-span-6">
-            <ImageSection
+            <ImageGallery
               product={product}
-              selectedVariantImage={selectedVariantImage}
+              img={
+                selectedVariantImage
+                  ? getImageUrl(selectedVariantImage)
+                  : getImageUrl(product?.thumbnail_image)
+              }
             />
           </div>
           <ProductInfo
@@ -65,7 +75,7 @@ export const ProductDetailsPage = () => {
         {product?.tags && product?.tags?.length > 0 && (
           <div className="mx-4 md:mx-auto mt-4 md:mt-6">
             <div className="mt-8 flex items-center gap-2">
-              <span className="text-sm font-medium">Tags:</span>
+              <span className="text-sm font-medium">{"Tags"}:</span>
               <div className="flex flex-wrap gap-2">
                 {product?.tags?.map((tag) => (
                   <Badge key={tag} variant="secondary">

@@ -28,13 +28,13 @@ import { apiErrorHandler } from "@/api/utils/error";
 export const useAddToWishlist = (item: ProductType) => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const { mutate, isPending } = useAddToWishlistMutation();
   const { startLoadingFn, stopLoadingFn } = useLoading();
+  const { mutate, isPending } = useAddToWishlistMutation();
   const wishlist = useSelector((state: RootStateType) => state.wishlist);
 
   const fnAddToWishlist = () => {
     if (!isAuthenticated()) {
-      toast.error("Please login to add item to wishlist");
+      toast.error("Please signin to add an item to your wishlist");
       navigate("/signin");
       return;
     }
@@ -48,9 +48,10 @@ export const useAddToWishlist = (item: ProductType) => {
 
     const data: StateSyncType = {
       id: item?.id,
-      productId: item?.id,
+      productId: item?.productId || item?.id,
       name: item?.name,
       image: item?.thumbnail_image,
+      category_name: item?.category_name,
       mainPrice: item?.calculable_price,
       showPrice: item?.main_price,
       variant: item?.variant || null,
@@ -58,11 +59,15 @@ export const useAddToWishlist = (item: ProductType) => {
     };
 
     const formData = new FormData();
-    formData.append("product_id", item?.id.toString());
+    formData.append(
+      "product_id",
+      item?.productId?.toString() || item?.id.toString()
+    );
     formData.append("variant", item?.variant || "");
     if (getUserId()) {
       formData.append("user_id", getUserId() as string);
     }
+
     mutate(formData, {
       onSuccess: (res) => {
         if (res?.result === true) {
@@ -88,10 +93,7 @@ export const useAddToWishlist = (item: ProductType) => {
   return { addLoading, fnAddToWishlist };
 };
 
-export const useRemoveFromWishlist = (
-  item: ProductType | StateSyncType,
-  isShowToast: boolean = true
-) => {
+export const useRemoveFromWishlist = (item: ProductType | StateSyncType) => {
   const dispatch = useDispatch();
   const { mutate } = useRemoveWishlistMutation();
   const { startLoadingFn, stopLoadingFn } = useLoading();
@@ -101,22 +103,21 @@ export const useRemoveFromWishlist = (
 
   const fnRemoveWishlist = () => {
     if (!isAuthenticated()) {
-      toast.error("Please login to remove item from wishlist");
+      toast.error("Please signin to remove an item from your wishlist");
       return;
     }
 
     if (isWishListed) {
       const id = isWishListed?.id;
-      dispatch(removeFromWishlistFn(id as number));
       mutate(
         { id: id as number | string },
         {
           onSuccess: (res) => {
             if (res?.result === true) {
               stopLoadingFn(item?.id);
-              if (isShowToast) {
-                toast.success(res?.message || "Item removed from wishlist");
-              }
+              toast.success(res?.message || "Item removed from wishlist");
+
+              dispatch(removeFromWishlistFn(id as number));
               revalidateQueryFn("get_wishlist");
             } else {
               toast.error(res?.message || "Something went wrong");
@@ -157,9 +158,10 @@ export const useGetWishlist = () => {
           productId: item?.product?.id,
           name: item?.product?.name,
           image: item?.product?.thumbnail_image,
+          category_name: item?.product?.category_name,
           mainPrice: extractNumericValue(item?.product?.base_price),
           showPrice: item?.product?.main_price,
-          variant: item?.product?.variant,
+          variant: item?.product?.variation,
           quantity: item?.quantity,
         };
         return result;

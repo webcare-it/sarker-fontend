@@ -1,14 +1,15 @@
-import { ShoppingCart } from "lucide-react";
+import { ShoppingCart, Trash2 } from "lucide-react";
 import { Button } from "../ui/button";
-import type { ProductType } from "@/type";
-import { useAddToCart } from "@/controllers/cartController";
+import type { ProductType, StateSyncType } from "@/type";
+import { useAddToCart, useRemoveFromCart } from "@/controllers/cartController";
 import { Spinner } from "../ui/spinner";
 import { cn } from "@/lib/utils";
 import { useRemoveFromWishlist } from "@/controllers/wishlistController";
+
 interface Props {
   product: ProductType;
   quantity?: number;
-  type: "CARD" | "DETAILS" | "MOVE_TO_CART";
+  type: "CARD" | "DETAILS" | "MOVE_TO_CART" | "SLIDER";
   productId?: string | number;
   variant?: string | null;
   onShowModal?: (
@@ -29,18 +30,15 @@ export const CartButton = ({
   onShowModal,
   onHideModal,
   productId,
-  isShowToast = true,
 }: Props) => {
   const { isLoading, fnAddToCart } = useAddToCart(
     product,
     quantity,
     variant,
-    productId
+    productId,
+    onShowModal
   );
-  const { removeLoading, fnRemoveWishlist } = useRemoveFromWishlist(
-    product,
-    isShowToast
-  );
+  const { removeLoading, fnRemoveWishlist } = useRemoveFromWishlist(product);
   const style = {
     CARD: {
       size: "xs",
@@ -54,13 +52,15 @@ export const CartButton = ({
     },
   } as const;
 
+  const handleMoveToCart = async () => {
+    await fnAddToCart();
+    await fnRemoveWishlist();
+  };
+
   if (type === "MOVE_TO_CART") {
     return (
       <Button
-        onClick={() => {
-          fnAddToCart();
-          fnRemoveWishlist();
-        }}
+        onClick={handleMoveToCart}
         disabled={removeLoading || isLoading}
         className={cn(
           "w-full text-xs",
@@ -68,14 +68,45 @@ export const CartButton = ({
         )}
         size="xs">
         <ShoppingCart className="h-4 w-4 md:mr-2" />
-        <span className="hidden md:block">Move to Cart</span>
+        <span className="hidden md:block">{"Move to Cart"}</span>
+      </Button>
+    );
+  }
+
+  if (type === "SLIDER") {
+    return (
+      <Button
+        className="w-full"
+        size="xs"
+        variant="default"
+        onClick={() => {
+          if (product?.variant_product == 1) {
+            if (onShowModal) {
+              onShowModal("DETAILS", product?.name, "max-w-4xl", product?.id);
+            }
+          } else {
+            fnAddToCart();
+            if (onHideModal) {
+              onHideModal();
+            }
+          }
+        }}
+        disabled={isLoading}>
+        {isLoading ? (
+          <Spinner />
+        ) : (
+          <>
+            <ShoppingCart className="h-4 w-4 hidden md:block" />
+            <span className="text-[10px]">{"Add to Cart"}</span>
+          </>
+        )}
       </Button>
     );
   }
 
   return (
     <Button
-      className="flex-1"
+      className="w-full"
       size={style[type].size}
       variant={style[type].variant}
       onClick={() => {
@@ -93,14 +124,60 @@ export const CartButton = ({
       disabled={isLoading}>
       {isLoading ? (
         <>
-          <Spinner /> Processing...
+          <Spinner /> {"Processing..."}
         </>
       ) : (
         <>
           {style[type].icon}
-          Add to Cart
+          {"Add to Cart"}
         </>
       )}
     </Button>
   );
+};
+
+interface PropsRemove {
+  item: StateSyncType;
+  type: "CART_DESKTOP" | "CART_MOBILE" | "CHECKOUT";
+}
+
+export const RemoveCartButton = ({ item, type }: PropsRemove) => {
+  const { removeLoading, fnRemoveCart } = useRemoveFromCart(item);
+  if (type === "CART_DESKTOP") {
+    return (
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={fnRemoveCart}
+        disabled={removeLoading}
+        className="text-muted-foreground hover:text-red-600 hover:bg-red-50 p-2">
+        <Trash2 className="h-4 w-4 mr-1" />
+        {"Remove"}
+      </Button>
+    );
+  }
+  if (type === "CART_MOBILE") {
+    return (
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={fnRemoveCart}
+        disabled={removeLoading}
+        className="text-muted-foreground hover:text-red-600 hover:bg-red-50 p-1">
+        <Trash2 className="h-4 w-4" />
+      </Button>
+    );
+  }
+  if (type === "CHECKOUT") {
+    return (
+      <Button
+        onClick={fnRemoveCart}
+        disabled={removeLoading}
+        variant="ghost"
+        size="sm">
+        <Trash2 className="h-4 w-4 text-red-600" />
+      </Button>
+    );
+  }
+  return null;
 };

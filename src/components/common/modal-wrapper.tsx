@@ -55,26 +55,26 @@ export const ModalWrapper = forwardRef<ModalWrapperRef, ModalWrapperProps>(
         {isOpen && (
           <motion.div
             style={{ zIndex: 9999 }}
-            className="fixed inset-0 flex items-center justify-center bg-black/50 backdrop-blur-md"
+            className="fixed inset-0 flex items-center justify-center bg-black/10 backdrop-blur-xs"
             onClick={handleClose}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.25 }}>
             <motion.div
-              className={`bg-white dark:bg-gray-800 p-4 md:p-6 shadow-xl rounded-lg w-full relative ${width}`}
+              className={`bg-white dark:bg-gray-800 p-2 md:p-4 shadow-sm rounded-lg w-full relative ${width}`}
               onClick={handlePropagation}
               initial={{ opacity: 0, scale: 0.9, y: -30 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: -30 }}
               transition={{ duration: 0.25 }}>
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-200 line-clamp-1">
+              <div className="flex justify-between items-center mb-2 md:mb-4">
+                <h2 className="text-base md:text-xl font-semibold text-foreground dark:text-gray-200 line-clamp-1">
                   {title}
                 </h2>
                 <button
                   onClick={handleClose}
-                  className="text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors duration-200 w-10 h-10 cursor-pointer flex items-center justify-center">
+                  className="text-muted-foreground dark:text-gray-300 hover:text-foreground dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors duration-200 w-8 h-8 cursor-pointer flex items-center justify-center">
                   <svg
                     className="w-5 h-5"
                     fill="none"
@@ -91,7 +91,7 @@ export const ModalWrapper = forwardRef<ModalWrapperRef, ModalWrapperProps>(
                 </button>
               </div>
               <div
-                className="bg-white dark:bg-gray-800 h-auto overflow-y-auto"
+                className="bg-background dark:bg-gray-800 h-auto overflow-y-auto"
                 style={{ maxHeight: "80vh" }}>
                 {children}
               </div>

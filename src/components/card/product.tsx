@@ -1,5 +1,4 @@
-import { ClipboardCheck, Image } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { CheckCircle, Image } from "lucide-react";
 import type { ProductType } from "@/type";
 import { Skeleton } from "../common/skeleton";
 import { getImageUrl, slugify } from "@/helper";
@@ -11,6 +10,9 @@ import { useModal } from "@/hooks/useModal";
 import { ModalWrapper } from "../common/modal-wrapper";
 import { Review } from "./review";
 import { Discount } from "../common/discount";
+import { CheckoutButton } from "../common/checkout-button";
+import { OptimizedImage } from "../common/optimized-image";
+import { Button } from "../ui/button";
 
 interface Props {
   product: ProductType;
@@ -21,16 +23,15 @@ export const ProductCard = ({ product }: Props) => {
 
   return (
     <>
-      <div className="group relative overflow-hidden rounded-lg border bg-card transition-all hover:scale-105 cursor-pointer duration-300">
+      <div className="group relative mt-2 md:mt-0 w-[178px] md:w-[237px] overflow-hidden rounded-lg border bg-card transition-all hover:scale-105 cursor-pointer duration-300 select-none">
         <WishlistButton product={product} size="DEFAULT" />
-
         <Discount product={product} type="CARD" />
 
         <Link to={`/products/${product?.id}/${slugify(product?.name)}`}>
           <div className="relative aspect-[16/12] overflow-hidden bg-muted">
             {product?.thumbnail_image ? (
-              <img
-                src={getImageUrl(product?.thumbnail_image)}
+              <OptimizedImage
+                src={product?.thumbnail_image}
                 alt={product?.name}
                 className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
               />
@@ -42,7 +43,7 @@ export const ProductCard = ({ product }: Props) => {
           </div>
         </Link>
 
-        <div className="p-3">
+        <div className="p-2 sm:p-3">
           <Link to={`/products/${product?.id}/${slugify(product?.name)}`}>
             <Review product={product} starSize="w-3 h-3" />
             <h3 className="line-clamp-1 mt-0.5 text-sm font-medium leading-tight text-foreground duration-300">
@@ -61,16 +62,21 @@ export const ProductCard = ({ product }: Props) => {
             </div>
           </Link>
 
-          <div className="flex gap-2 duration-300">
-            <CartButton
-              product={product}
-              type="CARD"
-              onShowModal={onShowModal}
-            />
-            <Button className="flex-1 border" size="xs" variant="secondary">
-              <ClipboardCheck className="h-2 w-2" />
-              Checkout
-            </Button>
+          <div className="flex  items-center gap-2 duration-300">
+            <div className="flex-1 w-full">
+              <CartButton
+                product={product}
+                type="SLIDER"
+                onShowModal={onShowModal}
+              />
+            </div>
+            <div className="flex-1 w-full">
+              <CheckoutButton
+                type="SLIDER"
+                product={product as ProductType}
+                quantity={1}
+              />
+            </div>
           </div>
         </div>
       </div>
@@ -83,17 +89,75 @@ export const ProductCard = ({ product }: Props) => {
         {modalConfig.type === "DETAILS" && (
           <DetailsModal
             id={product?.id as unknown as string}
-            onHideModal={onHideModal}
+            onShowModal={onShowModal}
           />
+        )}
+        {modalConfig.type === "SUCCESS" && (
+          <ProductSuccess product={product} onHideModal={onHideModal} />
         )}
       </ModalWrapper>
     </>
   );
 };
 
+interface ProductSuccessProps {
+  product: ProductType;
+  onHideModal: () => void;
+}
+
+export const ProductSuccess = ({
+  product,
+  onHideModal,
+}: ProductSuccessProps) => {
+  return (
+    <div className="w-full flex flex-col items-center justify-center gap-4">
+      <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto shadow-lg">
+        <CheckCircle className="h-6 w-6 text-green-600" />
+      </div>
+      <div className="flex items-start justify-center gap-2">
+        <div className="size-16 relative overflow-hidden rounded-lg bg-cover bg-center border border-border">
+          <img
+            src={
+              product?.thumbnail_image
+                ? getImageUrl(product?.thumbnail_image)
+                : "/placeholder.svg"
+            }
+            alt={product?.name}
+            className="w-full h-full object-cover relative"
+          />
+        </div>
+
+        <div>
+          <p className="text-sm font-medium text-foreground line-clamp-1">
+            {product?.name}
+          </p>
+          <p className="text-base font-semibold text-foreground">
+            {"Price"}: {product?.main_price}
+          </p>
+        </div>
+      </div>
+
+      <div className="w-full flex items-center justify-center gap-2">
+        <div className="flex-1 w-full">
+          <Button variant="outline" className="w-full" onClick={onHideModal}>
+            {"Back to shopping"}
+          </Button>
+        </div>
+        <div className="flex-1 w-full">
+          <Link to="/checkout">
+            <Button variant="default" className="w-full" onClick={onHideModal}>
+              {"Checkout"}
+            </Button>
+          </Link>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 export const ProductCardSkeleton = () => {
   return (
-    <div className="group relative overflow-hidden rounded-lg border bg-card transition-all hover:scale-105 cursor-pointer duration-300">
+    <div className="group w-[170px] md:w-[237px] relative overflow-hidden rounded-lg border bg-card transition-all hover:scale-105 cursor-pointer duration-300">
       <div className="absolute right-2 top-2 z-10 flex h-7 w-7 items-center justify-center rounded-full bg-background/80 backdrop-blur-sm">
         <Skeleton className="h-4 w-4 rounded-full" />
       </div>

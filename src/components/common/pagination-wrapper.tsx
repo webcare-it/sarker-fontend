@@ -49,14 +49,21 @@ export const PaginationWrapper = ({
     return page ? parseInt(page, 10) : null;
   };
 
+  const previousLabel = "« Previous";
+  const nextLabel = "Next »";
+
+  const isPreviousLink = (label: string) =>
+    label === previousLabel || label === "pagination.previous";
+
+  const isNextLink = (label: string) =>
+    label === nextLabel || label === "pagination.next";
+
   return (
     <section className={className}>
       <Pagination>
         <PaginationContent>
-          {/* Previous Button */}
           <PaginationItem>
             <PaginationPrevious
-              href="#"
               onClick={(e) => {
                 e.preventDefault();
                 if (current_page > 1) {
@@ -71,42 +78,37 @@ export const PaginationWrapper = ({
             />
           </PaginationItem>
 
-          {/* Page Numbers */}
           {links
-            .filter(
-              (link) => link.label !== "« Previous" && link.label !== "Next »"
+            ?.filter(
+              (link) => !isPreviousLink(link?.label) && !isNextLink(link?.label)
             )
-            .map((link, index) => {
-              const pageNumber = getPageNumber(link.url);
+            ?.map((link, index) => {
+              const pageNumber = getPageNumber(link?.url);
               if (!pageNumber) return null;
 
               return (
                 <PaginationItem key={index}>
                   <PaginationLink
-                    href="#"
-                    isActive={link.active}
+                    isActive={link?.active}
                     onClick={(e) => {
                       e.preventDefault();
                       handlePageClick(pageNumber);
                     }}
                     className="cursor-pointer">
-                    {link.label}
+                    {link?.label}
                   </PaginationLink>
                 </PaginationItem>
               );
             })}
 
-          {/* Show ellipsis if there are more pages */}
           {current_page < last_page - 2 && (
             <PaginationItem>
               <PaginationEllipsis />
             </PaginationItem>
           )}
 
-          {/* Next Button */}
           <PaginationItem>
             <PaginationNext
-              href="#"
               onClick={(e) => {
                 e.preventDefault();
                 if (current_page < last_page) {

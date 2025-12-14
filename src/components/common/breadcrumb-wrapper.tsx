@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Home } from "lucide-react";
+import { Home, LayoutDashboard } from "lucide-react";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -18,13 +18,27 @@ interface BreadcrumbItem {
 interface Props {
   items: BreadcrumbItem[];
   className?: string;
+  type?: "dashboard" | "home";
 }
 
-export const BreadcrumbWrapper = ({ items, className }: Props) => {
-  const allItems = [
-    { title: "Home", path: "/", icon: <Home className="h-4 w-4" /> },
-    ...items,
-  ];
+export const BreadcrumbWrapper = ({
+  items,
+  className,
+  type = "home",
+}: Props) => {
+  const dashboard = {
+    title: "My Dashboard",
+    path: "/dashboard",
+    icon: <LayoutDashboard className="h-4 w-4" />,
+  };
+
+  const home = {
+    title: "Home",
+    path: "/",
+    icon: <Home className="h-4 w-4" />,
+  };
+
+  const allItems = [type === "dashboard" ? dashboard : home, ...items];
 
   return (
     <Breadcrumb className={className}>
@@ -42,7 +56,7 @@ export const BreadcrumbWrapper = ({ items, className }: Props) => {
                   </Link>
                 </BreadcrumbLink>
               ) : (
-                <BreadcrumbPage className="flex items-center gap-1">
+                <BreadcrumbPage className="flex items-center gap-1 line-clamp-1">
                   {item?.icon && item?.icon}
                   {item?.title}
                 </BreadcrumbPage>

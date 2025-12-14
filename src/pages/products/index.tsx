@@ -7,9 +7,10 @@ import { SectionTitle } from "@/components/common/section-title";
 import { PaginationWrapper } from "@/components/common/pagination-wrapper";
 import type { ProductType } from "@/type";
 import { BaseLayout } from "@/components/layout/base-layout";
-import { useState } from "react";
 import type { PaginationDataType } from "@/components/common/pagination-wrapper";
 import { SeoWrapper } from "@/components/common/seo-wrapper";
+import { FilterProduct } from "@/components/common/filter-product";
+import { useState } from "react";
 
 export const ProductsPage = () => {
   const [filters, setFilters] = useState<Record<string, unknown>>({ page: 1 });
@@ -20,13 +21,18 @@ export const ProductsPage = () => {
 
   const handlePageChange = (page: number) => {
     setFilters((prev) => ({ ...prev, page }));
+    window.scrollTo(0, 0);
   };
 
   return (
     <>
-      <SeoWrapper title="All Products" />
+      <SeoWrapper title={"All Products"} />
       <BaseLayout>
-        <SectionTitle title="All Products" className="mt-10" />
+        <div className="flex items-center justify-between mt-8 md:mt-10 mb-4">
+          <SectionTitle title={"All Products"} className="" />
+          <FilterProduct filters={filters} setFilters={setFilters} />
+        </div>
+
         {isLoading ? (
           <CardLayout>
             {Array.from({ length: 20 }).map((_, i) => (
@@ -49,7 +55,7 @@ export const ProductsPage = () => {
               ))}
           </CardLayout>
         ) : (
-          <NoDataFound title="No products found" />
+          <NoDataFound title={"No products found"} />
         )}
 
         {paginationData && (

@@ -1,103 +1,72 @@
 import {
-  SectionTitle,
+  HomeSectionTitle,
   SectionTitleSkeleton,
 } from "@/components/common/section-title";
-import { useProductsByCategoryHome } from "@/api/queries/useProducts";
-import type { CategoryProductType } from "@/type";
+import { useGetCategoryProductsForHome } from "@/api/queries/useProducts";
+import type { ProductType } from "@/type";
+import { slugify } from "@/helper";
 import { ProductCard, ProductCardSkeleton } from "@/components/card/product";
 import { CardLayout } from "@/components/common/card-layout";
-import { AnimationWrapper } from "@/components/common/animation-wrapper";
-import { slugify } from "@/helper";
-
-interface CategoryProductsType {
-  categoryId: unknown;
-  data: { data?: CategoryProductType[] };
-  isLoading: boolean;
-  error: unknown;
-}
+import { useIsMobile, useIsTablet } from "@/hooks/useMobile";
 
 interface FormatType {
   categoryId: string;
-  categoryName: string;
-  products: CategoryProductType[];
+  name: string;
+  products: { data: ProductType[] };
   hasProducts: boolean;
+  isLoading: boolean;
 }
 
-const formatCategoryData = (rawData: CategoryProductsType[]): FormatType[] => {
-  if (!rawData || !Array.isArray(rawData)) return [];
-
-  return rawData
-    ?.filter(
-      (category) => category.data && !category.error && !category.isLoading
-    )
-    ?.map((category) => {
-      const products = category?.data?.data ?? [];
-      const firstProduct = products?.[0] ?? {};
-
-      return {
-        categoryId: String(category.categoryId),
-        categoryName: firstProduct?.category_name,
-        products: products,
-        hasProducts: products?.length > 0,
-      };
-    })
-    ?.filter((category) => category.hasProducts);
-};
-
 export const CategoryProductsSection = () => {
-  const { data, isLoading } = useProductsByCategoryHome();
+  const isMobile = useIsMobile();
+  const isTablet = useIsTablet();
+  const initialLength = isMobile ? 2 : isTablet ? 5 : 6;
+  const { data, isLoading } = useGetCategoryProductsForHome();
+  const formatted = (data?.data as FormatType[]) || [];
 
-  const formattedData = formatCategoryData(data as CategoryProductsType[]);
-
-  return (
-    <section>
-      {isLoading ? (
-        <CategoryProductsSkeleton />
-      ) : (
-        <>
-          {formattedData?.length > 0 &&
-            formattedData?.map((category) => (
-              <section key={category?.categoryId} className="mb-10 md:mb-20">
-                <SectionTitle
-                  title={category?.categoryName}
-                  linkText="View All"
-                  href={`/categories/${category?.categoryId}/${slugify(
-                    category?.categoryName
-                  )}`}
-                />
-                <CardLayout>
-                  {category?.products?.map((product, i: number) => (
-                    <AnimationWrapper
-                      key={product.id}
-                      initial={{ opacity: 0, y: 40 }}
-                      whileInView={{ opacity: 1, y: 0 }}
-                      viewport={{ once: true, amount: 0.2 }}
-                      transition={{ duration: 0.6, delay: i * 0.05 }}>
-                      <ProductCard key={product.id} product={product} />
-                    </AnimationWrapper>
-                  ))}
-                </CardLayout>
-              </section>
-            ))}
-        </>
-      )}
-    </section>
-  );
-};
-
-const CategoryProductsSkeleton = () => {
   return (
     <>
-      {Array.from({ length: 5 }).map((_, index) => (
-        <div key={index}>
-          <SectionTitleSkeleton />
-          <CardLayout>
-            {Array.from({ length: 5 }).map((_, index) => (
-              <ProductCardSkeleton key={index} />
-            ))}
-          </CardLayout>
-        </div>
-      ))}
+      {isLoading ? (
+        <>
+          {Array.from({ length: 3 }).map((_, i) => (
+            <section key={i} className="mb-10 md:mb-20">
+              <SectionTitleSkeleton />
+              <div className="w-full">
+                <CardLayout>
+                  {Array.from({ length: initialLength }).map((_, i) => (
+                    <ProductCardSkeleton key={i} />
+                  ))}
+                </CardLayout>
+              </div>
+            </section>
+          ))}
+        </>
+      ) : (
+        formatted?.length > 0 &&
+        formatted?.map((category) => {
+          const hasProducts =
+            category?.products && category?.products?.data?.length > 0;
+          return hasProducts ? (
+            <section key={category?.categoryId}>
+              <HomeSectionTitle
+                title={category?.name}
+                href={`/categories/${category?.categoryId}/${slugify(
+                  category?.name
+                )}`}>
+                <CardLayout>
+                  {category?.products &&
+                    category?.products?.data?.length > 0 &&
+                    category?.products?.data
+                      ?.slice(0, initialLength)
+                      ?.map((product) => (
+                        <ProductCard key={product?.id} product={product} />
+                      ))}
+                </CardLayout>
+              </HomeSectionTitle>
+            </section>
+          ) : null;
+        })
+      )}
     </>
   );
 };

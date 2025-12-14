@@ -13,9 +13,11 @@ export const useCouponApplyMutation = (): MutationType => {
       return response.data;
     },
     onSuccess: (res) => {
-      if (res) {
-        toast.success("Coupon applied successfully");
+      if (res?.result) {
+        toast.success(res?.message || "Coupon applied successfully");
         revalidateQueryFn("get_cart_summary");
+      } else {
+        toast.error(res?.message || "Failed to apply coupon");
       }
     },
     onError: (error) => {
@@ -34,9 +36,11 @@ export const useCouponRemoveMutation = (): MutationType => {
       return response.data;
     },
     onSuccess: (res) => {
-      if (res) {
-        toast.success("Coupon removed successfully");
+      if (res?.result) {
+        toast.success(res?.message || "Coupon removed successfully");
         revalidateQueryFn("get_cart_summary");
+      } else {
+        toast.error(res?.message || "Failed to remove coupon");
       }
     },
     onError: (error) => {
