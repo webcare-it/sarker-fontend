@@ -1,4 +1,4 @@
-import { CheckCircle, Image } from "lucide-react";
+import { CheckCircle } from "lucide-react";
 import type { ProductType } from "@/type";
 import { Skeleton } from "../common/skeleton";
 import { slugify } from "@/helper";
@@ -29,17 +29,11 @@ export const ProductCard = ({ product }: Props) => {
 
         <Link to={`/products/${product?.id}/${slugify(product?.name)}`}>
           <div className="relative aspect-[16/12] overflow-hidden bg-muted">
-            {product?.thumbnail_image ? (
-              <OptimizedImage
-                src={product?.thumbnail_image}
-                alt={product?.name}
-                className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-              />
-            ) : (
-              <div className="w-full absolute h-full bg-muted flex items-center justify-center">
-                <Image className="w-20 h-20 text-muted-foreground" />
-              </div>
-            )}
+            <OptimizedImage
+              src={product?.thumbnail_image || ""}
+              alt={product?.name}
+              className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+            />
           </div>
         </Link>
 
@@ -73,6 +67,7 @@ export const ProductCard = ({ product }: Props) => {
             <div className="flex-1 w-full">
               <CheckoutButton
                 type="SLIDER"
+                onShowModal={onShowModal}
                 product={product as ProductType}
                 quantity={1}
               />
